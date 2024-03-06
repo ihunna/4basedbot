@@ -1,0 +1,97 @@
+{%extends "includes.html"%}
+{% block title %}
+ Login into server | Monitor prices
+{% endblock %}
+
+{%block content%}
+    <div class="main-container">
+        <form action="" id="login-form" data-action="Login" data-action-url="/login" data-action-message="Logging you in">
+            <h1>Login to admin account</h1>
+            <div class="input-container">
+                <input type="email" id="email" name="email" autofocus required>
+                <label for="email">Enter  admin email</label>
+            </div>
+            <div class="input-container">
+                <input type="password" id="password" name="password" autocomplete="password" required>
+                <label for="password">Enter admin password</label>
+            </div>
+            <div class="input-container">
+               <a href="/signup" style="color: #03ab8c;">signup</a>
+            </div>
+            <div class="input-container">
+                <input type="submit" value="Login">
+            </div>
+        </form>
+    </div>
+    <style>
+        .main-container > form {
+            max-height: 100%;
+            max-width: 90%;
+            min-width: 30%;
+            margin: auto;
+            text-align: center;
+
+        }
+
+        .main-container > form > h1{
+            font-weight: 400;
+            margin-bottom: 28px;
+        }
+
+        .main-container > form > .input-container.reset-creds{
+            color: #03ab8c;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        @media screen and (max-width: 425.9px){
+            .main-container > form{
+                min-width: 80%;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+    <script>
+        const loginForm = document.querySelector('#login-form');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const action = loginForm.getAttribute('data-action');
+            const actionUrl = loginForm.getAttribute('data-action-url');
+            const actionMsg = loginForm.getAttribute('data-action-message');
+            
+            toogleLoader('show', `${actionMsg}  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+            const formData = new FormData(loginForm);
+
+            try {
+                loginForm.reset();
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`,'success');
+                    setTimeout(() => {
+                        toogleLoader('no-show');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 700);
+                    }, 3000);
+                } else {
+                    if (response.status !== 500) {
+                        const responseData = await response.json();
+                        console.error(`${action} failed:`, responseData.msg);
+                        toogleLoader('show', `${responseData.msg}`,'error');
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    } else {
+                        toogleLoader('show', `${action} failed`,'error');
+                        console.error(`${action} failed:`, response.statusText);
+                    }
+                }
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
+        });
+    </script>
+{%endblock%}

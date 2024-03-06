@@ -1,0 +1,103 @@
+{% extends "layout.html"%}
+{% block title %}
+    Creators
+{% endblock %}
+{%block main_content%}
+    <section class="creators">
+        <div class="configs-nav scroll scroll-h">
+            <ul>
+                <li>
+                    <a href="/configs?tab=creators">
+                        Add creators
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {%if creators|length > 0%}
+            <div class="holder table-container scroll scroll-v scroll-h" id="creators-table">
+                <div class="table-header">
+                    <div class="table-row">
+                    <div class="table-cell check-box">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'creators-table')">
+                    </div>              
+                    <div class="table-cell badge">Username</div>
+                    <div class="table-cell double-cell">Last login</div>
+                    <div class="table-cell double-cell">Created on</div>
+                    <div class="table-cell actions">Actions</div>
+                    </div>
+                </div>
+                <div class="table-body">
+                    {%for creator in creators%}
+                        {%set creator_data = creator.data%}
+                        {%set creator_details = creator_data.details.user%}
+                        <div data-action-url="{{ url_for('creator',action='view-item',creator=creator.id) }}" 
+                            class="table-row" data-item="{{creator.id}}" data-action-target="{{creator_details.identifier}}" id="{{creator.id}}">
+                            <div class="table-cell check-box">
+                                <input type="checkbox" class="checkbox-row">
+                            </div>
+                            <div class="table-cell badge">
+                                <span class="bg-success">
+                                    {{creator_details.name|capitalize}}
+                                </span>
+                            </div>
+                            <div class="table-cell double-cell">{{creator_details.last_login}}</div>                             
+                            <div class="table-cell double-cell">{{ creator.created_at}}</div>
+                            <div class="table-cell actions">
+                                <ul class="actions-list">
+                                    <li class="tags">
+                                        <a href="/posts?action=get-items&item={{creator_details.identifier}}&key=creator"
+                                            class="bg-primary light">
+                                            <i class="fas fa-eye"></i>
+                                            posts
+                                        </a>
+                                    </li>
+                                    <li class="tags">
+                                        <a href="/configs?creator={{creator_details.identifier}}&tab=images"
+                                            class="bg-primary light">
+                                            <i class="fas fa-image"></i>
+                                            images
+                                        </a>
+                                    </li>
+                                    <li class="tags">
+                                        <a href="/configs?creator={{creator_details.identifier}}&tab=captions"
+                                            class="bg-primary light">
+                                            <i class="fas fa-tasks"></i>
+                                            captions
+                                        </a>
+                                    </li>
+                                    <li data-action="delete" data-action-url="/delete-items/creators" 
+                                    data-action-message="Deleting creator {{creator.id}}"
+                                    data-item="{{creator.id}}" data-action-target="{{creator.id}}"
+                                    onclick="handleAction(this,'creators-table','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    {%endfor%}
+                    <div class="table-row table-bottom">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/creators" 
+                                data-action-message="Deleting creators" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'creators-table','multiple')">
+                                Delete
+                            </div>
+                        </div>
+                        <div class="bottom-nav">
+                            <div class="sum-total">{{ current_page}} / {{total_creators}}</div>
+                            <div class="more-less">
+                                <a href="{{ url_for('creators', page=prev_page) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                                &nbsp; &nbsp;
+                                <a href="{{ url_for('creators', page=next_page) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {%endif%}
+    </section>
+{%endblock%}

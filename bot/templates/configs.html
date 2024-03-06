@@ -1,0 +1,196 @@
+{% extends "layout.html"%}
+{% block title %}
+Configs
+{% endblock %}
+{%block main_content%}
+    <section class="configs">
+        <style>
+            /* @media screen and (max-width:375.9px) {
+                .configs-nav{
+                    justify-content: center;
+                }
+            } */
+            #images-form{
+                position: relative;
+            }
+            .upload-images input{
+                overflow: hidden;
+                width: 0;
+            }
+            .upload-images label{
+                padding: 2px 10px;
+                font-size: 14px;
+            }
+        </style>
+        {%if tab != 'files'%}
+            <div class="configs-nav scroll scroll-h">
+                <ul>
+                    <li class="{%if tab=='captions'%} active {%endif%}">
+                        <a href="/configs?tab=captions&creator={{creator}}">
+                            Captions
+                        </a>
+                    </li>
+                    <li class="{%if tab=='images'%} active {%endif%}">
+                        <a href="/configs?tab=images&creator={{creator}}">
+                            Images
+                        </a>
+                    </li>
+                    <li class="upload-images">
+                        <form action="/config/images/upload/{{creator}}" method="post" 
+                            enctype="multipart/form-data" id="images-form" 
+                            data-action-next-url="/configs?tab=images&creator={{creator}}"
+                            data-action-url="/config/images/upload/{{creator}}">
+                            <label for="image-upload" class="visually-hidden">Upload Images</label>
+                            <input type="file" id="image-upload" name="file" accept="image/*" multiple>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        {%else%}
+            <div class="configs-nav scroll scroll-h">
+                <ul>
+                    <li class="{%if category=='proxies'%} active {%endif%}">
+                        <a href="/configs?tab=proxies">
+                            Proxies
+                        </a>
+                    </li>
+                    <li class="{%if category=='captions'%} active {%endif%}">
+                        <a href="/configs?tab=captions">
+                            Captions
+                        </a>
+                    </li>
+                    <li class="{%if category=='creators'%} active {%endif%}">
+                        <a href="/configs?tab=creators">
+                            Add creators
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        {%endif%}
+        {%if tab == 'images'%}
+            <div class="table-actions">
+                <ul class="select-items">
+                    <li class="select all">
+                        <span>select all</span> 
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'images-grid','grid')">
+                    </li>
+                </ul>
+            </div>
+            <div class="grid-container">
+                <ul class="image-grid" id="images-grid">
+                    {%for image in images%}
+                        <li class="image-item grid-row"
+                            data-item="{{image}}"
+                            data-action-target="{{creator}}">
+                            <div class="item-header">
+                                <span class="select">
+                                    <input type="checkbox" class="checkbox-row" onclick="selectSingle(this,'grid')">
+                                </span>
+                                <span class="tool-tip" onclick="toogleGridActions(this)">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </span>
+                                <ul class="actions-list">
+                                    <li data-action="delete"  data-action-url="/delete-items/images" 
+                                        data-action-message="Deleting image {{image}}"  data-item="{{image}}"
+                                        data-action-target="{{creator}}"
+                                        onclick="handleAction(this,'images-grid','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                </ul>
+                            </div>
+                            <img src="/image/{{creator}}/images/{{image}}" alt="Cat 1">
+                        </li>
+                    {%endfor%}
+                </ul>
+                <div class="table-row table-bottom grid">
+                    <div class="bottom-actions show">
+                        <div data-action="delete" data-action-url="/delete-items/images" 
+                            data-action-message="Deleting images" 
+                            class="action delete bg-danger light" onclick="handleAction(this,'images-grid','multiple','grid')">
+                            Delete
+                        </div>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="sum-total">
+                            Page {{page}} of {{total_pages}}
+                        </div>
+                        <div class="more-less">
+                            {%if page > 1%}
+                                <a href="{{ url_for('configs', tab=tab, page=page-1, creator=creator) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                                &nbsp; &nbsp;
+                            {%endif%}
+                            {%if page < total_pages%}
+                            <a href="{{ url_for('configs', tab=tab, page=page+1, creator=creator) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            {%endif%}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {%elif tab == 'files'%}
+            <div class="configs-container">
+                {%if category in ['proxies','captions']%}
+                    <form action="" id="configs-form" data-action="update" 
+                        data-action-message="Updating file"
+                        data-action-category="{{category}}",
+                        data-action-url="/files/{{category}}/update">
+                        {%if configs and configs|length > 0%}
+                            <textarea class="scroll scroll-v" name="configs" >{%for config in configs%}{{config}}{%endfor%}</textarea>
+                        {%else%}
+                            <textarea class="scroll scroll-v" name="configs" placeholder="Type your {{category}} here seperated by single newline (enter key)... &#13;&#10;{{category}} are universal"></textarea>
+                        {%endif%}
+                        <input type="submit" value="Update">
+                    </form>
+                {%else%}
+                    <form action="" id="configs-form" data-action="create" 
+                        data-action-message="Adding creators"
+                        data-action-category="{{category}}",
+                        data-action-url="/creators/add"
+                        data-action-next-url="/tasks">
+                        
+                        <textarea class="scroll scroll-v" name="configs" placeholder="Type email:password here seperated by single newline (enter key)... &#13;&#10;{{category}} are universal" required></textarea>
+                        <input type="submit" value="Add creators">
+                    </form>
+                {%endif%}
+            </div>
+        {%else%}
+            <div class="configs-container">
+                <form action="" id="configs-form"
+                    data-action="update" 
+                    data-action-message="Captions update"
+                    data-action-category="captions"
+                    data-action-url="/config/captions/update">
+                    {%if captions and captions|length > 0%}
+                        <textarea class="scroll scroll-v" name="configs" >{%for cap in captions%}{{cap}}{%endfor%}</textarea>
+                    {%else%}
+                        <textarea class="scroll scroll-v" name="configs" placeholder="Type your captions here seperated by double newline (enter key)..."></textarea>
+                    {%endif%}
+                        <input type="submit" value="Update">
+                </form>
+            </div>
+        {%endif%}
+        <style>
+            .configs-container {
+                width: 100%;
+            }
+
+            .configs-container form{
+                border-radius: 8px;
+            }
+    
+            .configs-container form textarea {
+                width: 100%;
+                min-height: 250px;
+                height: auto;
+                box-sizing: border-box;
+                border: 1px solid var(--success);
+                padding: 10px;
+                resize: none;
+                font-size: 16px;
+            }
+        </style>
+    </section>
+{%endblock%}

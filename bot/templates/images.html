@@ -1,0 +1,312 @@
+{% extends "layout.html"%}
+{% block title %}
+ Price drops | Monitor prices
+{% endblock %}
+{%block main_content%}
+    {%if price_drops|length > 0 or store_view%}
+        <section class="prices">
+            <div class="stores-nav scroll scroll-h">
+                <ul>
+                    {%if store_view != 'all_store'%}
+                        <li>
+                            <a href="{{ url_for('price_drops',page=1,limit=limit, view=g.view,store_view='all_store') }}">Reset</a>
+                        </li>
+                    {%endif%}
+                    {%for store in g.stores%}
+                        <li class="{%if store.name ==store_view%} active {%endif%}">
+                            <a href="{%if group and group=='task_id'%}javascript:void(0){%else%}{{ url_for('price_drops',page=1,limit=limit, view=g.view,order=order,sort=sort,group=group,item=item,store_view=store.name) }}{%endif%}">
+                                {{store.name|capitalize}}</a>
+                        </li>
+                    {%endfor%}
+                </ul>
+            </div>
+            <div class="table-actions">
+                <ul class="select-items">
+                        {%if g.view == 'grid'%}
+                            <li class="select all">
+                                <span>select all</span> 
+                                <input type="checkbox" id="check-all" onclick="selectAll(this,'prices-grid','grid')">
+                            </li>
+                        {%endif%}
+                        <li class="search">
+                            <input type="text" placeholder="enter a zipcode, state or sku" 
+                                data-page="{{g.page}}" data-order="date" class="search-init"
+                                onclick="searchInit(this)">
+                            <span>
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </li>
+                    </ul>
+
+                <ul class="toogle-view">
+                    {%if action and action == 'get-items'%}
+                        {%set item = item%}
+                    {%endif%}
+                    <li id="display-type">
+                        <i class="fas fa-th"></i> 
+                        <span>change view</span>
+                        <div class="actions">
+                            <a href="/price-drops?{{params|view_table}}" 
+                            class="table-view {%if g.view == 'table'%} active {%endif%} ">Table</a>
+                            <a href="/price-drops?{{params|view_grid}}" 
+                            class="grid-view {%if g.view == 'grid'%} active {%endif%} ">Grid/Cards</a>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-filter"></i>
+                        <span>filter by</span>
+                        <div class="actions">
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='saving',sort='desc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'saving' and sort == 'desc'%} active {%endif%}">Savings DESC</a>
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='saving',sort='asc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'saving' and sort == 'asc'%} active {%endif%}">Savings ASC</a>
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='percentage',sort='desc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'percentage' and sort == 'desc'%} active {%endif%}">Percentage DESC</a>
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='percentage',sort='asc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'percentage' and sort == 'asc'%} active {%endif%}">Percentage ASC</a>
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='date',sort='desc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'date' and sort == 'desc'%} active {%endif%}">Date DESC</a>
+                            <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view, order='date',sort='asc',group=group,item=item,store_view=store_view) }}" 
+                            class="order {%if order == 'date' and sort == 'asc'%} active {%endif%}">Date ASC</a>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-sort"></i>
+                        <span>group by</span>
+                        {%if group and group!='task_id'%}
+                            <div class="actions {%if action and action == 'get-items'%} no-show{%endif%}">
+                                <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view,group='sku',item=item,store_view=store_view,order=order,sort=sort) }}"
+                                    class="sku {%if group == 'sku'%} active {%endif%}">Item</a>
+                                
+                                <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view,group='store_name',item=item,store_view=store_view,order=order,sort=sort) }}" 
+                                    class="store {%if group == 'store_name'%} active {%endif%}">Store</a>
+                                
+                                <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view,group='state',item=item,store_view=store_view,order=order,sort=sort) }}" 
+                                    class="store {%if group == 'state'%} active {%endif%}">State</a>
+                                
+                                <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view,group='zipcode',item=item,store_view=store_view,order=order,sort=sort) }}" 
+                                    class="store {%if group == 'zipcode'%} active {%endif%}">Zipcode</a>
+                                
+                                <a href="{{ url_for('price_drops', action=action, page=1,limit=limit, view=g.view,group='single',item=item,store_view=store_view,order=order,sort=sort) }}" 
+                                    class="store {%if group == 'single'%} active {%endif%}">Individual items</a>
+                            </div>
+                        {%endif%}
+                    </li>
+                </ul>
+            </div>
+            {%if g.view == 'grid'%}
+                <div class="holder grid-container">
+                    <ul id="prices-grid">
+                        {%for prices in price_drops%}
+                            {%if grouped%}
+                                {% set price = prices.prices[0]%}
+                                {%set items_count = prices.prices|length%}
+                                
+                                {%if group == 'sku'%}
+                                    {%set pointer = price.sku %}
+                                {%elif group == 'store_name'%}
+                                    {%set pointer = price.store_name%}
+                                {%elif group == 'state'%}
+                                    {%set pointer = price.state%}
+                                {%elif group == 'zipcode'%}
+                                    {%set pointer = price.zipcode%}
+                                {%endif%}
+                                
+                                {%set item_url = url_for('price_drops',action='get-items',limit=limit,item=pointer,group=group,view=g.view)%}
+                                
+                            {%else%}
+                                {%set price = prices%}
+                                {%set pointer = price.id%}
+                                {%set item_url = url_for('price_drops',action='view-item',store=price.store|lower,item=pointer)%}
+                            {%endif%}
+                            
+                            <li data-item="{{pointer}}" data-grouped="{{grouped|lower}}" data-action-target="{{price.store}}" class="grid-row">
+                                <div class="item-header" style="background-image: url({{price.image}});">
+                                    <span class="select" >
+                                        <input type="checkbox" class="checkbox-row" onclick="selectSingle(this,'grid')">
+                                    </span>
+                                    <span class="tool-tip" onclick="toogleGridActions(this)">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </span>
+                                    <ul class="actions-list">
+                                        <li data-action="delete" data-grouped={{grouped|lower}} data-action-url="/delete-items/price-drops" 
+                                            data-action-message="Deleting price drop {{price.pointer}}"
+                                            data-item="{{pointer}}" data-action-target="{{price.store}}"
+                                            onclick="handleAction(this,'prices-table','single')">
+                                            <i class="fas fa-trash text-danger"></i>
+                                        </li>
+                                    </ul>
+                                    <span class="badge">{{price.store|capitalize}}</span>
+                                </div>
+                                <div class="item-details">
+                                    <div class="pricing">
+                                        <span class="now">
+                                            ${{price.price_now|round(2)}}
+                                        </span>
+                                        <span class="was">
+                                            ${{price.price_before|round(2)}}
+                                        </span>
+                                        <span class="percentage">
+                                            -{{price.percentage|round(2)}}%
+                                        </span>
+                                    </div>
+                                    <div class="save">
+                                        save ${{price.saving|round(2)}}
+                                    </div>
+                                    <div class="text-success seen-count">
+                                        {%if grouped%} 
+                                            {%if items_count >= 20%}
+                                                {{items_count - 1}}+ price drops
+                                            {%else%}
+                                                {{items_count}} price drops
+                                            {%endif%}
+                                        {%else%}
+                                            one of this item
+                                        {%endif%}
+                                    </div>
+                                    <div class="title">
+                                        {{price.title}}
+                                    </div>
+                                    <div class="time-ago">
+                                        since {{price.date|time_ago}}
+                                    </div>
+                                </div>
+                                <div class="item-bottom">
+                                    <a href="{{item_url}}" class="action">
+                                        view detials
+                                    </a>
+                                </div>
+                            </li>
+                        {%endfor%}
+                    </ul>
+                    <div class="table-row table-bottom grid">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/price-drops" 
+                                data-action-message="Deleting price drops" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'prices-grid','multiple','grid')">
+                                Delete
+                            </div>
+                        </div>
+                        <div class="bottom-nav">
+                            <div class="sum-total">
+                                {%if action != 'get-items'%}
+                                    {{sum}} / {{total_price_drops}}
+                                {%endif%}
+                            </div>
+                            <div class="more-less">
+                                <a href="{{ url_for('price_drops', action=action, page=prev_page,limit=limit, view=g.view,order=order,sort=sort,group=group,item=item,store_view=store_view) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                                &nbsp; &nbsp;
+                                <a href="{{ url_for('price_drops', action=action, page=next_page,limit=limit,view=g.view,order=order,sort=sort,group=group,item=item,store_view=store_view) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {%else%}
+                <div class="holder table-container scroll scroll-v scroll-h" id="prices-table">
+                    <div class="table-header">
+                        <div class="table-row">
+                        <div class="table-cell check-box">
+                            <input type="checkbox" id="check-all" onclick="selectAll(this,'prices-table','table')">
+                        </div>              
+                        <div class="table-cell badge">Store</div>
+                        <div class="table-cell">Item</div>
+                        <div class="table-cell double-cell">Date</div>
+                        <div class="table-cell">was</div>
+                        <div class="table-cell">Now</div>
+                        <div class="table-cell">Save</div>
+                        {% if grouped%}
+                            <div class="table-cell">Count</div>
+                        {%endif%}
+                        <div class="table-cell actions">Actions</div>
+                        </div>
+                    </div>
+                    <div class="table-body">
+                        {%for prices in price_drops%}
+                            {%if grouped%}
+                                {% set price = prices.prices[0]%}
+                                {%set items_count = prices.prices|length%}
+                            {%else%}
+                                {%set price = prices%}
+                            {%endif%}
+
+                            {%if grouped%}
+                                {%if group == 'sku'%}
+                                    {%set pointer = price.sku %}
+                                {%elif group == 'store_name'%}
+                                    {%set pointer = price.store_name%}
+                                {%endif%}
+                                    {%set url = url_for('price_drops',action='get-items',limit=limit,item=pointer,group=group,view=g.view)%}
+                            {%else%}
+                                {%set url = url_for('price_drops',action='view-item',store=price.store|lower,item=price.id)%}
+                            {%endif%}
+                            <div data-action-url="{{url}}" 
+                                class="table-row" data-item="{{price.id}}" data-action-target="{{price.store}}">
+                                <div class="table-cell check-box">
+                                    <input type="checkbox" class="checkbox-row">
+                                </div>
+                                <div class="table-cell badge">
+                                    <span class="bg-{{price.store|lower}}">
+                                        {{price.store|capitalize}}
+                                    </span>
+                                </div>
+                                <div class="table-cell">{{price.sku}}</div>
+                                <div class="table-cell double-cell">{{ price.date|date_time}}</div>
+                                <div class="table-cell">${{price.price_before|round(2)}}</div>
+                                <div class="table-cell">${{price.price_now|round(2)}}</div>
+                                <div class="table-cell">${{price.saving|round(2)}}</div>
+                                {% if grouped%}
+                                    <div class="table-cell">
+                                        {%if items_count >= 20%}
+                                            {{items_count - 1}}+
+                                        {%else%}
+                                            {{items_count}}
+                                        {%endif%}
+                                    </div>
+                                {%endif%}
+                                <div class="table-cell actions">
+                                    <ul class="actions-list">
+                                        <li data-action="delete" data-action-url="/delete-items/price-drops" 
+                                            data-action-message="Deleting price drop {{price.sku}}"
+                                            data-item="{{price.id}}" data-action-target="{{price.store}}"
+                                            onclick="handleAction(this,'prices-table','single')">
+                                            <i class="fas fa-trash text-danger"></i>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        {%endfor%}
+                        <div class="table-row table-bottom table">
+                            <div class="bottom-actions show">
+                                <div data-action="delete" data-action-url="/delete-items/price-drops" 
+                                    data-action-message="Deleting price drops" 
+                                    class="action delete bg-danger light" onclick="handleAction(this,'prices-table','multiple')">
+                                    Delete
+                                </div>
+                            </div>
+                            <div class="bottom-nav">
+                                <div class="sum-total">
+                                    {%if action != 'get-items'%}
+                                    {{sum}} / {{total_price_drops}}
+                                    {%endif%}
+                                </div>
+                                <div class="more-less">
+                                    <a href="{{ url_for('price_drops', action=action, page=prev_page,limit=limit, view=g.view,order=order,sort=sort,group=group,item=item,store_view=store_view) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    &nbsp; &nbsp;
+                                    <a href="{{ url_for('price_drops', action=action, page=next_page,limit=limit, view=g.view,order=order,sort=sort,group=group,item=item,store=store_view) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {%endif%}
+        </section>
+    {%endif%}
+{%endblock%}

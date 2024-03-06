@@ -1,0 +1,104 @@
+{%extends "includes.html"%}
+{% block title %}
+ Logs
+{% endblock %}
+
+{%block content%}
+    <div class="main-container">
+        <section class="logs scroll scroll-v scroll-bar">
+            {% if logs and logs|length > 0%}
+                <ul class="">
+                    {%for log in logs%}
+                        <li 
+                            class="{%if 'error' in log|lower%}bg-danger
+                            {%elif 'success' in log|lower%} bg-success
+                            {%else%} bg-secondary
+                            {%endif%} scroll scroll-h">
+                            {{log}}
+                        </li>
+                    {%endfor%}
+                </ul>
+                <div class="clear-logs">
+                    <div class="" data-action-url="/logs/clear" 
+                        data-action-message="Clearing logs ..."
+                        data-action="Clear logs" 
+                        id="clear-logs">
+                        Clear logs
+                    </div>
+                </div>
+            {%endif%}
+        </section>
+    </div>
+    <style>
+        .main-container > .logs{
+            max-width: 90%;
+            height: 80%;
+            margin: auto;
+        }
+        .main-container > .logs > ul{
+            padding: 20px;
+            border: 5px solid var(--secondary);
+        }
+
+        .main-container > .logs > ul > li{
+            padding: 5px;
+        }
+
+        .main-container > .logs > ul > li:not(:last-child){
+            margin-bottom: 20px;
+        }
+        .main-container > .logs > .clear-logs{
+            position: absolute;
+            bottom: 10px;
+            left: 40%;
+        }
+        .main-container > .logs > .clear-logs > div{
+            padding: 5px 16px;
+            cursor: pointer;
+            background: var(--soft-text);
+            color: var(--secondary);
+            font-weight: 500;
+            border-radius: 20px;
+        }
+    </style>
+     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+    <script>
+        const clearLogs = document.querySelector('#clear-logs');
+        clearLogs.addEventListener('click',async()=>{
+            const action = clearLogs.getAttribute('data-action');
+            const actionUrl = clearLogs.getAttribute('data-action-url');
+            const actionMsg = clearLogs.getAttribute('data-action-message');
+            
+            toogleLoader('show', `${actionMsg}  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+            
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`,'success');
+                    setTimeout(() => {
+                        toogleLoader('no-show');
+                        setTimeout(() => {
+                            window.location.href = `/logs`;
+                        }, 700);
+                    }, 3000);
+                } else {
+                    if (response.status !== 500) {
+                        const responseData = await response.json();
+                        console.error(`${action} failed:`, responseData.msg);
+                        toogleLoader('show', `${responseData.msg}`,'error');
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    } else {
+                        toogleLoader('show', `${action} failed`,'error');
+                        console.error(`${action} failed:`, response.statusText);
+                    }
+                }
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
+        })
+    </script>
+{%endblock%}

@@ -1,0 +1,455 @@
+{% extends "layout.html"%}
+{% block title %}
+ Posts
+{% endblock %}
+{%block main_content%}
+    <style>
+        .day-holder{
+            border: 1px solid var(--success);
+            border-radius: 5px;
+            width: 85%;
+            margin: auto;
+            padding: 10px 20px;
+        }
+        .day-holder:not(:first-child){
+            margin-top: 10px;
+        }
+        .day-holder > .input-container{
+            width: 100%;
+        }
+        .input-container > input:not(:last-child):focus,
+        .input-container > textarea,
+        .input-container > select:focus{
+            background: var(--secondary);
+        }
+
+        .input-container > input:focus + label, 
+        .input-container > input:valid + label,
+        .input-container > textarea:focus + label,
+        .input-container > textarea:valid + label{
+            background: var(--secondary);
+        }
+
+        .day-holder .day-label{
+            padding: 2.5px 5px;
+            background: var(--success);
+            width: fit-content;
+            font-size: 12px;
+            margin: 10px 0px 5px 0px;
+        }
+
+        .more{
+            margin-top: 40px;
+            margin-bottom: 40px;
+            border: none;
+            justify-content: end;
+        }
+        .input-container.more > .add-day{
+            border: 1px solid var(--success);
+            border-radius: 5px;
+            width: fit-content;
+            padding: 2.5px 5px;
+        }
+        .input-container.date-picker-container{
+            width: fit-content;
+            margin: auto 0;
+        }
+    </style>
+    {%if action == 'add-post'%}
+        <section class="add-post">
+            <div class="holder form-holder">
+                <form action="" id="posts-form" data-action="Create post" 
+                    data-action-url="/posts/add-post" data-action-message="Creating post..." 
+                    data-next-action-url="/tasks">
+                    <h3 class="form-header">
+                        Fill the form to start operation for all added creators, add more days if needed.
+                    </h3>
+                    <div class="input-container">
+                        <input type="number" id="max-workers" name="max-workers" value="50" autofocus tocomplete="delay" required>
+                        <label for="max-workers">Number of concurrent actions</label>
+                    </div>
+                    <div class="day-holder">
+                        <div class="input-container day">
+                            <input type="number" id="day-1-image-count" name="day-1-image-count" autofocus tocomplete="delay" required>
+                            <label for="day-1-image-count">Number of images</label>
+                        </div>
+                        <div class="input-container">
+                            <input type="number" id="day-1-paid-count" name="day-1-paid-count" value="0" tocomplete="delay" required>
+                            <label for="day-1-paid-count">Number of paid images</label>
+                        </div>
+                        <!-- <div class="input-container" style="display:none">
+                            <select name="day-1-paid-caption" id="day-1-paid-caption">
+                                <option value="">Choose a caption for paid images</option>
+                                {% for caption in captions%}
+                                    <option value="{{caption}}">{{caption}}</option>
+                                {%endfor%}
+                            </select>
+                        </div> -->
+                        <div class="input-container" style="display:none">
+                            <input type="number" id="day-1-price" name="day-1-price" value="0" tocomplete="delay" required>
+                            <label for="day-1-price">Price of paid images</label>
+                        </div>
+                        <div class="input-container flex">
+                            <div class="radio-box">
+                                <input type="radio" class="captions" id="day-1-caption-creator" name="day-1-caption-source" value="creator">
+                                <label for="day-1-caption-creator">Use creator's caption</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="captions" id="day-1-caption-universal" name="day-1-caption-source" value="universal" checked>
+                                <label for="day-1-caption-universal">Use universal caption</label>
+                            </div>
+                        </div>
+                        <div class="input-container">
+                            <select name="day-1-caption" id="day-1-caption" required>
+                                <option value="">Choose a caption</option>
+                                {% for caption in captions%}
+                                    <option value="{{caption}}">{{caption}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>
+                        <div class="input-container">
+                            <select name="day-1-paid-caption" id="day-1-paid-caption">
+                                <option value="">Choose a caption for paid posts</option>
+                                {% for caption in captions%}
+                                    <option value="{{caption}}">{{caption}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>
+                        <div class="input-container flex">
+                            <div class="radio-box">
+                                <input type="radio" id="day-1-schedule" name="day-1-run-type" value="schedule">
+                                <label for="day-1-schedule">Schedule post</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" id="day-1-run-now" name="day-1-run-type" value="run-now" checked>
+                                <label for="day-1-run-now">Post now</label>
+                            </div>
+                        </div>
+                        <div class="input-container date-picker-container" style="display: none;">
+                            <input type="datetime-local" id="day-1-schedule-date" name="day-1-schedule-date">
+                            <label for="day-1-schedule-date">Picker a date and time</label>
+                        </div>
+                        <div class="day-label">Day 1</div>
+                    </div>
+                    <div class="input-container more flex">
+                        <div class="add-day" id="add-day">
+                            <span><i class="fas fa-plus"></i></span> more day
+                        </div>
+                    </div>
+                    <div class="input-container flex">
+                        <input type="submit" value="Submit">
+                    </div>
+                </form>
+            </div>
+        </section>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Counter to keep track of the day number
+                let dayCounter = 1;
+        
+                // Function to update day numbering
+                function updateDayNumbering() {
+                    const dayLabels = document.querySelectorAll('.day-label');
+                    dayLabels.forEach((dayLabel, index) => {
+                        const newDayNumber = index + 1;
+                        dayLabel.textContent = `Day ${newDayNumber}`;
+                    });
+                }
+
+                function updatePaidElements(dayHolder, dayNumber) {
+                    // const paidCaptionSelect = dayHolder.querySelector('[name^="day-"][id$="-paid-caption"]');
+                    // const freeCaptionSelect = dayHolder.querySelector('[name^="day-"][id$="-free-caption"]');
+                    
+                    // const paidCaptionSelectHolder = paidCaptionSelect.parentNode;
+                    // const freeCaptionSelectHolder = freeCaptionSelect.parentNode;
+
+                    const paidCountInput = dayHolder.querySelector('[name^="day-"][id$="-paid-count"]');
+                    const freeCountInput = dayHolder.querySelector('[name^="day-"][id$="-image-count"]');
+                    const priceInput = dayHolder.querySelector('[name^="day-"][id$="-price"]');
+                    const priceInputHolder = priceInput.parentNode;
+                    
+                    const initUpdate = () =>{
+                        const paidCount = parseInt(paidCountInput.value, 10);
+                        const freeCount = parseInt(freeCountInput.value,10);
+                        
+    
+                        if (paidCount > 0 && paidCount <= freeCount) {
+                            // paidCaptionSelect.setAttribute('required', 'required');
+                            // paidCaptionSelectHolder.style.display = '';
+
+                            priceInput.setAttribute('required', 'required');
+                            priceInput.value = '15';
+                            priceInputHolder.style.display = '';
+
+
+                            // if(paidCount === freeCount){
+                            //     freeCaptionSelect.removeAttribute('required');
+                            //     freeCaptionSelectHolder.style.display = 'none';
+                            // }
+                        }
+                        else{
+                            // paidCaptionSelect.removeAttribute('required');
+                            // freeCaptionSelect.setAttribute('required','required');
+                            // freeCaptionSelectHolder.style.display = '';
+                            // paidCaptionSelectHolder.style.display = 'none';
+
+                            priceInput.removeAttribute('required');
+                            priceInputHolder.style.display = 'none';
+
+                        }
+                    }
+                    paidCountInput.addEventListener('keyup',()=>{
+                        initUpdate()
+                    });
+
+                    freeCountInput.addEventListener('keyup',()=>{
+                        initUpdate()
+                    });
+                }
+
+                function updateRadioButtons(newDayHolder, dayNumber) {
+                    // Find radio buttons and update their names, IDs, and event listeners
+                    const radios = newDayHolder.querySelectorAll('input[type="radio"]');
+                    radios.forEach(radio => {
+                        const oldName = radio.getAttribute('name');
+                        const newName = oldName.replace(/\d+/, dayNumber);
+                        radio.setAttribute('name', newName);
+                    
+                        // Update label 'for' attribute
+                        const label = radio.nextElementSibling;
+                        if (label && label.tagName === 'LABEL') {
+                            const oldLable = label.getAttribute('for');
+                            const newLabel = `${oldLable.replace(/\d+/, dayCounter)}`;
+                            label.setAttribute('for', newLabel);
+                            radio.setAttribute('id',newLabel);
+                        }
+                    });
+
+                    // Add event listeners to toggle the date picker based on the selected option
+                    const datePicker = newDayHolder.querySelector('.date-picker-container');
+                    radios.forEach(radio => {
+                        radio.addEventListener('change', function () {
+                            if (radio.classList.contains('captions')){
+                                const captionSelect = newDayHolder.querySelector('[name^="day-"][id$="caption"]');
+                                const captionSelectHolder = captionSelect.parentNode;
+
+                                const captionPaidSelect = newDayHolder.querySelector('[name^="day-"][id$="paid-caption"]');
+                                const captionPaidSelectHolder = captionPaidSelect.parentNode;
+                                
+                                const paidCountInput = newDayHolder.querySelector('[name^="day-"][id$="-paid-count"]');
+                                const freeCountInput = newDayHolder.querySelector('[name^="day-"][id$="-image-count"]');
+                                
+                                const paidCount = parseInt(paidCountInput.value, 10);
+                                const freeCount = parseInt(freeCountInput.value,10);
+                                
+                                if (this.value == 'creator'){
+                                    captionSelect.removeAttribute('required');
+                                    captionSelectHolder.style.display = 'none';
+
+                                    captionPaidSelect.removeAttribute('required');
+                                    captionPaidSelectHolder.style.display = 'none';
+                                }else{
+                                    captionSelect.setAttribute('required','required');
+                                    captionSelectHolder.style.display = '';
+                                    
+                                    if (paidCount > 0 && paidCount <= freeCount){
+                                        captionPaidSelect.setAttribute('required','required');
+                                    }
+                                    captionPaidSelectHolder.style.display = '';
+                                }
+                            }else{
+                                if (this.value === 'schedule') {
+                                    datePicker.style.display = ''; // Show date picker
+                                } else {
+                                    datePicker.style.display = 'none'; // Hide date picker
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                if (dayCounter === 1){
+                    const originalDayHolder = document.querySelector('.day-holder');
+                    updatePaidElements(originalDayHolder,dayCounter);
+                    updateRadioButtons(originalDayHolder, dayCounter);
+                }
+
+                // Function to add a new day holder
+                function addDayHolder() {
+                    dayCounter++;
+        
+                    // Clone the original day holder
+                    const originalDayHolder = document.querySelector('.day-holder');
+                    const newDayHolder = originalDayHolder.cloneNode(true);
+        
+                    // Update the IDs and names of input fields
+                    newDayHolder.querySelectorAll('input, select').forEach(input => {
+                        const oldName = input.getAttribute('name');
+                        const newName = `${oldName.replace(/\d+/, dayCounter)}`;
+                        input.setAttribute('name', newName);
+                        input.setAttribute('id',newName);
+
+                        const label = input.nextElementSibling;
+                        if (label && label.tagName === 'LABEL') {
+                            const oldLable = label.getAttribute('for');
+                            const newLabel = `${oldLable.replace(/\d+/, dayCounter)}`;
+                            label.setAttribute('for', newLabel);
+                            input.setAttribute('id',newLabel);
+                        }
+                    });
+                    updatePaidElements(newDayHolder, dayCounter);
+                    updateRadioButtons(newDayHolder, dayCounter);
+        
+                    // Add a "Remove Day" button
+                    const removeDayButton = document.createElement('div');
+                    removeDayButton.classList.add('remove-day');
+                    removeDayButton.innerHTML = '<span><i class="fas fa-minus"></i></span> remove day';
+                    removeDayButton.addEventListener('click', function () {
+                        newDayHolder.remove();
+                        dayCounter--;
+                        updateDayNumbering();
+                    });
+        
+                    // Append the "Remove Day" button to the new day holder
+                    newDayHolder.appendChild(removeDayButton);
+        
+                    // Insert the new day holder inside the form
+                    const form = document.querySelector('#posts-form');
+                    form.insertBefore(newDayHolder, form.querySelector('.input-container.more'));
+        
+                    // Update day numbering
+                    updateDayNumbering();
+                }
+        
+                // Event listener for the "Add Day" button
+                document.querySelector('#add-day').addEventListener('click', addDayHolder);
+            });
+        </script>
+    {%elif action == 'edit-post'%}
+        <section class="edit">
+            <div class="holder form-holder">
+                <form action="" id="posts-form" data-action="Edit post" 
+                    data-action-url="/posts/edit-post" data-action-message="Editing post..." 
+                    data-next-action-url="/posts?action=view-item&post={{post.id}}">
+                    <h3 class="form-header">
+                        Fill the form to edit the schedule details.
+                    </h3>
+                    <div class="day-holder">
+                        <div class="input-container">
+                            <select name="caption" id="caption">
+                                <option value="">Choose a caption</option>
+                                {% for caption in captions%}
+                                    {%set caption = caption|replace('\n','')%}
+                                    <option value="{{caption}}" {%if post.caption == caption%}selected{%endif%}>{{caption}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>
+                        <div class="input-container">
+                            <input type="number" id="post-price" name="post-price" value="{{post.price}}">
+                            <label for="post-price">Post price</label>
+                        </div>
+                        <div class="input-container date-picker-container">
+                            <input type="datetime-local" id="schedule-date" name="schedule-date" value="{{post.schedule_date}}">
+                            <label for="schedule-date">Picker a date and time</label>
+                        </div>
+                    </div>
+                    <input type="hidden" value="{{post.id}}" name="post-id">
+                    <input type="hidden" value="{{post.creator}}" name="creator">
+                    <div class="input-container flex">
+                        <input type="submit" value="Update">
+                    </div>
+                </form>
+            </div>
+        </section>
+    {%else%}
+        {%if posts|length > 0%}
+            <section class="posts">
+                <div class="holder table-container scroll scroll-v scroll-h" id="posts-table">
+                    <div class="table-header">
+                        <div class="table-row">
+                        <div class="table-cell check-box">
+                            <input type="checkbox" id="check-all" onclick="selectAll(this,'posts-table')">
+                        </div>              
+                        <div class="table-cell badge">Creator</div>
+                        <div class="table-cell">Price</div>
+                        <div class="table-cell">Images</div>
+                        <div class="table-cell double-cell">Schedule date</div>
+                        <div class="table-cell double-cell">Date</div>
+                        <div class="table-cell actions">Actions</div>
+                        </div>
+                    </div>
+                    <div class="table-body">
+                        {%for post in posts%}
+                            <div data-action-url="{{ url_for('posts',action='view-item',post=post.id) }}" 
+                                class="table-row" data-item="{{post.id}}" data-action-target="{{post.creator}}" id="{{post.id}}">
+                                <div class="table-cell check-box">
+                                    <input type="checkbox" class="checkbox-row">
+                                </div>
+                                <div class="table-cell badge">
+                                    <span class="bg-success">
+                                        {{post.creator_username|capitalize}}
+                                    </span>
+                                </div>                             
+                                <div class="table-cell ">${{ post.price}}</div>
+                                <div class="table-cell ">{{ post.posted_images}}</div>
+                                {% if post.type =='schedule'%}
+                                    {%set schedule_date = post.schedule_date%}
+                                {%else%}
+                                    {%set schedule_date = 'None'%}
+                                {%endif%}
+                                <div class="table-cell double-cell double-cell">{{schedule_date}}</div>
+                                <div class="table-cell double-cell double-cell">{{post.created_at}}</div>
+                                <div class="table-cell actions">
+                                    <ul class="actions-list">
+                                        <li class="tags">
+                                            <a href="{{post.post_link}}" target="_blank"
+                                                class="bg-primary light">
+                                                <i class="fas fa-eye"></i>
+                                                view
+                                            </a>
+                                        </li>
+                                        <li data-action="delete" data-action-url="/delete-items/posts" 
+                                        data-action-message="Deleting post {{post.id}}"
+                                        data-item="{{post.id}}" data-action-target="{{post.creator}}"
+                                        onclick="handleAction(this,'posts-table','single')">
+                                            <i class="fas fa-trash text-danger"></i>
+                                        </li>
+                                        {%if post.type == 'schedule'%}
+                                        <li>
+                                            <a href="{{ url_for('posts', action='edit-post',post=post.id) }}">
+                                                <i class="fas fa-edit text-secondary"></i>
+                                            </a>
+                                        </li>
+                                        {%endif%}
+                                    </ul>
+                                </div>
+                            </div>
+                        {%endfor%}
+                        <div class="table-row table-bottom">
+                            <div class="bottom-actions show">
+                                <div data-action="delete" data-action-url="/delete-items/posts" 
+                                    data-action-message="Deleting posts" 
+                                    class="action delete bg-danger light" onclick="handleAction(this,'posts-table','multiple')">
+                                    Delete
+                                </div>
+                            </div>
+                            <div class="bottom-nav">
+                                <div class="sum-total">{{current_page}} / {{total_posts}}</div>
+                                <div class="more-less">
+                                    <a href="/posts?page={{prev_page}}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    &nbsp; &nbsp;
+                                    <a href="/posts?page={{next_page}}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        {%endif%}
+    {%endif%}
+{%endblock%}

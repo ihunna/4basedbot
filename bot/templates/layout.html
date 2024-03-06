@@ -1,0 +1,328 @@
+{%extends "includes.html"%}
+{%block content%}
+    <div class="main-container">
+        <aside id="aside">
+            <div class="title">
+                Console update
+            </div>
+            <div class="content">
+                <ul class="scroll scroll-v" id="console">
+                   
+                </ul>
+            </div>
+            <div class="footer">
+                <a href="/logs" class="link">
+                    logs
+                </a>
+                <div class="link" id="clear-console">
+                    clear console
+                </div>
+                <div class="link" id="logout"
+                    data-action="logout" data-action-url="/logout" data-action-message="Logging you out...">
+                  <i class="fas fa-sign-out"></i> &nbsp; logout
+                </div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <div class="navbar scroll scroll-h">
+                <ul>
+                    <li class="{%if g.page == 'dashboard'%} active {%endif%}">
+                        <a href="/">
+                            <i class="fas fa-chart-pie"></i> Overview
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'add-post' or g.page == 'edit-post'%} active {%endif%}">
+                        <a href="/posts?action=add-post">
+                            <i class="fas fa-plus"></i> Add a post
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'posts'%} active {%endif%}">
+                        <a href="/posts">
+                            <i class="fas fa-chart-line"></i> Posts
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'schedules'%} active {%endif%}">
+                        <a href="/posts?action=get-items&item=schedule&key=type">
+                            <i class="fas fa-history"></i> Schedules
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'tasks'%} active {%endif%}">
+                        <a href="/tasks">
+                            <i class="fas fa-tasks"></i> Tasks
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'creators'%} active {%endif%}">
+                        <a href="/creators">
+                            <i class="fas fa-user"></i> Creators
+                        </a>
+                    </li>
+                    <li class="{%if g.page in ['admins','edit-admin']%} active {%endif%}">
+                        <a href="/admins">
+                            <i class="fas fa-user"></i> Admins
+                        </a>
+                    </li>
+                    <li class="{%if g.page == 'configs'%} active {%endif%}">
+                        <a href="/configs">
+                            <i class="fas fa-cog"></i> Configs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="content scroll scroll-v">
+                <div class="page-header">
+                    <h2>
+                        {{ g.page.replace("-", " ")|capitalize }}
+                        {%block trail%}{%endblock%}
+                    </h2>
+                </div>
+                {%block main_content%}{%endblock%}
+            </div>
+        </div>
+        <!-- <div class="search-display" id="search-display">
+            <div class="search-overlay"></div>
+            <form action="#" class="search-bar" id="search-form">
+                <select name="search-field" id="">
+                    <option value="zipcode" selected>Zipcode</option>
+                    <option value="state">State</option>
+                    <option value="sku">SKU</option>
+                    <option value="date">Date</option>
+                    <option value="keyword">Keyword</option>
+                </select>
+                <input type="text" placeholder="Enter a zipcode here and click search" 
+                name="search-content">
+                <button type="submit" id="search-btn">Search</i></button>
+            </form>
+            <div class="search-content">
+                <div class="contents  scroll scroll-v scroll-bar">
+                    <ul>
+                    </ul>
+                </div>
+                <div class="bottom">
+                    <div class="loading">
+                        Please wait...
+                    </div>
+                    <div class="actions">
+                        <a href="#" id="cancel">cancel</a>
+                        <a href="#" id="more">more</a>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+    </div>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+    <script>
+        
+        const clearConsoleBtn = document.getElementById('clear-console');
+        clearConsoleBtn.addEventListener('click',()=>{
+            const _console = document.getElementById("console");
+            _console.innerHTML = '';
+        })
+
+        const logoutBtn = document.getElementById('logout');
+        logoutBtn.addEventListener('click', async () => {
+            const action = logoutBtn.getAttribute('data-action');
+            const actionUrl = logoutBtn.getAttribute('data-action-url');
+            const actionMsg = logoutBtn.getAttribute('data-action-message');
+            
+            toogleLoader('show', `${actionMsg}  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: {}
+                });
+
+                if (response.ok) {
+                    toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`,'success');
+                    setTimeout(() => {
+                        toogleLoader('no-show');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 700);
+                    }, 3000);
+                } else {
+                    if (response.status !== 500) {
+                        const responseData = await response.json();
+                        console.error(`${action} failed:`, responseData.msg);
+                        toogleLoader('show', `${responseData.msg}`,'error');
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    } else {
+                        toogleLoader('show', `${action} failed`,'error');
+                        console.error(`${action} failed:`, response.statusText);
+                    }
+                }
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
+        });
+    </script>
+    {%if g.page == 'configs'%}
+        <script>
+            try{
+                const imagesForm = document.querySelector('#images-form');
+                const imageInput = imagesForm.querySelector('#image-upload');
+                const label = imagesForm.querySelector('label')
+                const nextActionUrl = imagesForm.getAttribute('data-action-next-url');
+                const actionUrl = imagesForm.getAttribute('data-action-url');
+                imageInput.addEventListener('change', async () => {
+                    const action = 'Image upload';
+                    toogleLoader('show', `Uploading images  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+                    // Create a FormData object and append the selected files
+                    const formData = new FormData();
+                    const files = imageInput.files;
+                    for (let i = 0; i < files.length; i++) {
+                        formData.append(`file${i}`, files[i]);
+                    }
+
+                    // Perform the image upload
+                    const response = await fetch(actionUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
+                        setTimeout(() => {
+                            toogleLoader('no-show');
+                            setTimeout(() => {
+                                window.location.href = nextActionUrl;
+                            }, 700);
+                        }, 3000);
+                    } else {
+                        if (response.status !== 500) {
+                            const responseData = await response.json();
+                            console.error(`${action} failed:`, responseData.msg);
+                            toogleLoader('show', `${responseData.msg}`, 'error');
+                            setTimeout(() => toogleLoader('no-show'), 3000);
+                        } else {
+                            toogleLoader('show', `${action} failed`, 'error');
+                            console.error(`${action} failed:`, response.statusText);
+                            setTimeout(() => toogleLoader('no-show'), 3000);
+                        }
+                    }
+                });
+            }catch (error) {
+                console.error('Error occurred:', error);
+            }
+            
+            try{
+                const configsForm = document.querySelector('#configs-form');
+                const action = configsForm.getAttribute('data-action');
+                const category = configsForm.getAttribute('data-action-category');
+                const actionMsg = configsForm.getAttribute('data-action-message');
+                const url = configsForm.getAttribute('data-action-url');
+                const nextActionUrl = configsForm.getAttribute('data-action-next-url');
+
+                configsForm.addEventListener('submit',async(e)=>{
+                    e.preventDefault();
+
+                    toogleLoader('show', `${actionMsg} &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+                    
+                    const configs = new FormData(configsForm);
+                    console.log(configs)
+                    
+                    const response = await fetch(`${url}`, {
+                        method: 'POST',
+                        body: configs,
+                    });
+
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        toogleLoader('show', `${responseData.msg} &nbsp;<i class="fas fa-check icon"></i>`, 'success');
+                        setTimeout(() => {
+                            toogleLoader('no-show');
+                            if (nextActionUrl !== null){
+                                setTimeout(() => {
+                                window.location.href = nextActionUrl;
+                            }, 700);
+                            }
+                        }, 3000);
+                    } else {
+                        if (response.status !== 500) {
+                            const responseData = await response.json();
+                            console.error(`${actionMsg} failed:`, responseData.msg);
+                            toogleLoader('show', `${responseData.msg}`, 'error');
+                            setTimeout(() => toogleLoader('no-show'), 3000);
+                        } else {
+                            toogleLoader('show', `${actionMsg} failed`, 'error');
+                            console.error(`${actionMsg} failed:`, response.statusText);
+                            setTimeout(() => toogleLoader('no-show'), 3000);
+                        }
+                    }
+                })
+            }catch(error){
+                console.log(error)
+            }
+        
+        </script>
+
+    {%elif g.page in ['add-post','edit-post','edit-admin']%}
+        <script>
+            const page = '{{g.page}}'
+            const pageConfigs = {
+                'add-post':'#posts-form',
+                'edit-post':'#posts-form',
+                'edit-admin':'#admins-form'
+            }
+            const form = document.querySelector(`${pageConfigs[page]}`);
+            const action = form.getAttribute('data-action');
+            const url = form.getAttribute('data-action-url');
+            const actionMsg = form.getAttribute('data-action-message');
+            const nextUrl = form.getAttribute('data-next-action-url');
+            
+            form.addEventListener('submit',async(e)=>{
+                e.preventDefault();
+
+                toogleLoader('show', `${actionMsg} &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+
+                const data = new FormData(form);
+                let jsonData = {}
+                
+                for (const [key, value] of data.entries()) {
+                    jsonData[key] = value;
+                }
+
+                if (['add-post', 'edit-post'].includes(page)) {
+                    const days = form.querySelectorAll('.day-holder');
+                    jsonData.total_days = days.length;
+                }
+
+                const response = await fetch(`${url}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json()
+                    toogleLoader('show', `${responseData.msg}  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
+                    setTimeout(() => {
+                        toogleLoader('no-show');
+                        setTimeout(() => {
+                            window.location.href = nextUrl;
+                        }, 700);
+                    }, 3000);
+                } else {
+                    if (response.status !== 500) {
+                        const responseData = await response.json();
+                        console.error(`${action} failed:`, responseData.msg);
+                        toogleLoader('show', `${responseData.msg}`, 'error');
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    } else {
+                        toogleLoader('show', `${action} failed`, 'error');
+                        console.error(`${action} failed:`, response.statusText);
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    }
+                }
+            })
+        </script>
+    {%endif%}
+
+    <script src="https://cdn.socket.io/4.1.3/socket.io.min.js"></script>
+    <script>
+        const socket = io.connect('{{g.host}}');
+    </script>
+    <script src="{{ url_for('static', filename='js/client.js') }}"></script>
+{%endblock%}

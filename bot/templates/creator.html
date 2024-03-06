@@ -1,0 +1,162 @@
+{% extends "layout.html"%}
+{% block title %}
+ Creator
+{% endblock %}
+{%block main_content%}
+    <section class="creator">
+        <div class="details">
+            <ul class="main">
+                <li class="name">@{{creator.name}}</li>
+                <li class="tags">
+                    {%if creator.verification_status%}
+                        {%set v_status = creator.verification_status%}
+                    {%else%}
+                        {%set v_status = 'not verified'%}
+                    {%endif%}
+                    <div class="{%if v_status == 'approved'%}bg-success{%else%}bg-warning {%endif%}">
+                        {{v_status}}
+                    </div>
+                    <div class="{%if creator.status%}bg-success{%else%}bg-warning {%endif%}">
+                        {{creator.status}}
+                    </div>
+                </li>
+                <li><span>Email:</span> {{creator.identifier}}</li>
+                <li><span>User ID:</span> {{creator._id}}</li>
+               
+                <li class="double roles">
+                    <span>Roles:</span>
+                    {%for role in creator.roles%}
+                        <div>({{role.name}})</div>
+                    {%endfor%}
+                </li>
+                {%if creator.last_activity %}
+                    <li class="double">
+                        <span>Last actions:</span>
+                        <div>
+                            {{creator.last_activity.type}}
+                        </div>
+                        <div>
+                            {{creator.last_activity.executed_at}}
+                        </div>
+                    </li>
+                {%endif%}
+            </ul>
+            <div class="stats">
+                {%if creator.avatar != None%}
+                    <div class="avatar" style="background-image: url({{creator.picture}});">
+                    </div>
+                {%endif%}
+                <ul>
+                    <li class="double">
+                        <span>
+                            Posts
+                        </span>
+                        {%if creator.file_stack_count%}
+                            {%set post_count = creator.file_stack_count%}
+                        {%else%}
+                            {%set post_count = 0%}
+                        {%endif%}
+
+                        <div class="
+                            {%if post_count >= 10%}
+                            bg-success
+                            {%elif post_count == 0%}bg-danger
+                            {%else%} bg-warning
+                            {%endif%}">
+                            {{post_count}}
+                        </div>
+                    </li>
+                    <li class="double">
+                        <span>
+                            Priced posts
+                        </span>
+                        {%set data_count = creator.fileStackWithPriceCount%}
+                        <div class="
+                            {%if data_count >= 10%}
+                            bg-success
+                            {%elif data_count == 0%}bg-danger
+                            {%else%} bg-warning
+                            {%endif%}">
+                            {{creator.fileStackWithPriceCount}}
+                        </div>
+                    </li>
+                    <li class="double">
+                        <span>
+                            Earnings
+                        </span>
+                        {%set data_count = creator.coins%}
+                        <div class="
+                            {%if data_count >= 10%}
+                            bg-success
+                            {%elif data_count == 0%}bg-danger
+                            {%else%} bg-warning
+                            {%endif%}">
+                            {{creator.coins}}
+                        </div>
+                    </li>
+                    <li class="double">
+                        <span>
+                            Followers
+                        </span>
+                        {%if creator.follower_count%}
+                        {%set follower_count = creator.follower_count%}
+                        {%else%}
+                            {%set follower_count = 0%}
+                        {%endif%}
+                        <div class="
+                            {%if follower_count >= 10%}
+                            bg-success
+                            {%elif follower_count == 0%}bg-danger
+                            {%else%} bg-warning
+                            {%endif%}">
+                            {{follower_count}}
+                        </div>
+                    </li>
+                    <li class="double">
+                        <span>
+                            Likes
+                        </span>
+                        {%set data_count = creator.likes_count%}
+                        {%if creator.likes_count%}
+                        {%set likes_count = creator.likes_count%}
+                        {%else%}
+                            {%set likes_count = 0%}
+                        {%endif%}
+                        <div class="
+                            {%if likes_count >= 10%}
+                            bg-success
+                            {%elif likes_count == 0%}bg-danger
+                            {%else%} bg-warning
+                            {%endif%}">
+                            {{likes_count}}
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="settings">
+            <div class="toggles">
+                <div class="toggle-container">
+                    <span class="toggle-label">Reuse IP</span>
+                    {%if reuse_ip%}
+                        <div data-action-url="/creator"
+                            data-action="edit" data-action-status="no"
+                            data-action-key="reuse_ip"
+                            data-action-creator="{{creator.identifier}}"
+                            class="toggle-btn positive active" onclick="toggleButton('external')">
+                            <div class="slider"></div>
+                        </div>
+                    {%else%}
+                        <div data-action-url="/creator"
+                            data-action="edit" data-action-status="yes"
+                            data-action-key="reuse_ip"
+                            data-action-creator="{{creator.identifier}}"
+                            class="toggle-btn negative" onclick="toggleButton('external')">
+                            <div class="slider"></div>
+                        </div>
+                    {%endif%}
+                  </div>
+            </div>
+        </div>
+    </section>
+{%endblock%}

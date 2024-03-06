@@ -1,0 +1,108 @@
+{%extends "includes.html"%}
+{% block title %}
+ Signup to manage server
+{% endblock %}
+
+{%block content%}
+    <div class="main-container">
+        <form action="" id="signup-form" data-action="Signup" data-action-url="/signup" data-action-message="Signing you up">
+            <h1>Signup to manage server</h1>
+            <div class="input-container">
+                <input type="email" id="email" name="email" autofocus required>
+                <label for="email">Enter  user email</label>
+            </div>
+            <div class="input-container">
+                <input type="text" id="password" name="password" autocomplete="password" required>
+                <label for="password">Enter user password</label>
+            </div>
+            <div class="input-container">
+                <select name="role" id="role" required>
+                    <option value="admin" selected>Admin</option>
+                    <option value="super-admin">Super admin</option>
+                </select>
+            </div>
+            <div class="input-container">
+                <input type="text" id="secret-key" name="secret-key" autocomplete="secret-key" required>
+                <label for="secret-key">Enter server secret key</label>
+            </div>
+            <div class="input-container">
+                <a href="/login" style="color: #03ab8c;">login</a>
+             </div>
+            <div class="input-container">
+                <input type="submit" value="signup">
+            </div>
+        </form>
+    </div>
+    <style>
+        .main-container > form {
+            max-height: 100%;
+            max-width: 90%;
+            min-width: 30%;
+            margin: auto;
+            text-align: center;
+
+        }
+
+        .main-container > form > h1{
+            font-weight: 400;
+            margin-bottom: 28px;
+        }
+
+        .main-container > form > .input-container.reset-creds{
+            color: #03ab8c;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        @media screen and (max-width: 425.9px){
+            .main-container > form{
+                min-width: 80%;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+    <script>
+        const signupForm = document.querySelector('#signup-form');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const action = signupForm.getAttribute('data-action');
+            const actionUrl = signupForm.getAttribute('data-action-url');
+            const actionMsg = signupForm.getAttribute('data-action-message');
+            
+            toogleLoader('show', `${actionMsg}  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+            const formData = new FormData(signupForm);
+
+            try {
+                signupForm.reset();
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`,'success');
+                    setTimeout(() => {
+                        toogleLoader('no-show');
+                        setTimeout(() => {
+                            window.location.href = `/admins?action=view-item&admin=${responseData.admin}`;
+                        }, 700);
+                    }, 3000);
+                } else {
+                    if (response.status !== 500) {
+                        const responseData = await response.json();
+                        console.error(`${action} failed:`, responseData.msg);
+                        toogleLoader('show', `${responseData.msg}`,'error');
+                        setTimeout(() => toogleLoader('no-show'), 3000);
+                    } else {
+                        toogleLoader('show', `${action} failed`,'error');
+                        console.error(`${action} failed:`, response.statusText);
+                    }
+                }
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
+        });
+    </script>
+{%endblock%}

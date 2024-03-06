@@ -1,0 +1,262 @@
+{% extends "layout.html"%}
+{% block title %}
+ Overview | Monitor prices
+{% endblock %}
+{%block main_content%}
+    <div class="stats">
+        <div class="stat">
+            <h2>{{stats.schedules}}</h2>
+            <span>Schedules</span>
+        </div>
+        <div class="stat">
+            <h2>{{stats.tasks}}</h2>
+            <span>Tasks</span>
+        </div>
+        <div class="stat">
+            <h2>{{stats.creators}}</h2>
+            <span>Creators</span>
+        </div>
+        <div class="stat">
+            <h2>{{stats.posts}}</h2>
+            <span>Posts</span>
+        </div>
+    </div>
+    {%if posts|length > 0%}
+        <section class="posts">
+            <h3 class="header">
+                Posts/Schedules
+            </h3>
+            <div class="holder table-container scroll scroll-v scroll-h" id="posts-table">
+                <div class="table-header">
+                    <div class="table-row">
+                    <div class="table-cell check-box">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'posts-table')">
+                    </div>              
+                    <div class="table-cell badge">Creator</div>
+                    <div class="table-cell">Price</div>
+                    <div class="table-cell">Images</div>
+                    <div class="table-cell double-cell">Schedule date</div>
+                    <div class="table-cell double-cell">Date</div>
+                    <div class="table-cell actions">Actions</div>
+                    </div>
+                </div>
+                <div class="table-body">
+                    {%for post in posts%}
+                        <div data-action-url="{{ url_for('posts',action='view-item',post=post.id) }}" 
+                            class="table-row" data-item="{{post.id}}" data-action-target="{{post.creator}}" id="{{post.id}}">
+                            <div class="table-cell check-box">
+                                <input type="checkbox" class="checkbox-row">
+                            </div>
+                            <div class="table-cell badge">
+                                <span class="bg-success">
+                                    {{post.creator_username|capitalize}}
+                                </span>
+                            </div>                             
+                            <div class="table-cell ">${{ post.price}}</div>
+                            <div class="table-cell ">{{ post.posted_images}}</div>
+                            {% if post.type =='schedule'%}
+                                {%set schedule_date = post.schedule_date%}
+                            {%else%}
+                                {%set schedule_date = 'None'%}
+                            {%endif%}
+                            <div class="table-cell double-cell double-cell">{{schedule_date}}</div>
+                            <div class="table-cell double-cell double-cell">{{post.created_at}}</div>
+                            <div class="table-cell actions">
+                                <ul class="actions-list">
+                                    <li class="tags">
+                                        <a href="{{post.post_link}}" target="_blank"
+                                            class="bg-primary light">
+                                            <i class="fas fa-eye"></i>
+                                            view
+                                        </a>
+                                    </li>
+                                    <li data-action="delete" data-action-url="/delete-items/posts" 
+                                    data-action-message="Deleting post {{post.id}}"
+                                    data-item="{{post.id}}" data-action-target="{{post.creator}}"
+                                    onclick="handleAction(this,'posts-table','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                    {%if post.type == 'schedule'%}
+                                    <li>
+                                        <a href="{{ url_for('posts', action='edit-post',post=post.id) }}">
+                                            <i class="fas fa-edit text-secondary"></i>
+                                        </a>
+                                    </li>
+                                    {%endif%}
+                                </ul>
+                            </div>
+                        </div>
+                    {%endfor%}
+                    <div class="table-row table-bottom">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/posts" 
+                                data-action-message="Deleting posts" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'posts-table','multiple')">
+                                Delete
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    {%endif%}
+    {%if creators|length > 0%}
+        <section class="creators">
+            <h3 class="header">
+                Creators
+            </h3>
+            <div class="holder table-container scroll scroll-v scroll-h" id="creators-table">
+                <div class="table-header">
+                    <div class="table-row">
+                    <div class="table-cell check-box">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'creators-table')">
+                    </div>              
+                    <div class="table-cell badge">Username</div>
+                    <div class="table-cell double-cell">Last login</div>
+                    <div class="table-cell double-cell">Created on</div>
+                    <div class="table-cell actions">Actions</div>
+                    </div>
+                </div>
+                <div class="table-body">
+                    {%for creator in creators%}
+                        {%set creator_data = creator.data%}
+                        {%set creator_details = creator_data.details.user%}
+                        <div data-action-url="{{ url_for('creator',action='view-item',creator=creator.id) }}" 
+                            class="table-row" data-item="{{creator.id}}" data-action-target="{{creator_details.identifier}}" id="{{creator.id}}">
+                            <div class="table-cell check-box">
+                                <input type="checkbox" class="checkbox-row">
+                            </div>
+                            <div class="table-cell badge">
+                                <span class="bg-success">
+                                    {{creator_details.name|capitalize}}
+                                </span>
+                            </div>
+                            <div class="table-cell double-cell">{{creator_details.last_login}}</div>                             
+                            <div class="table-cell double-cell">{{ creator.created_at}}</div>
+                            <div class="table-cell actions">
+                                <ul class="actions-list">
+                                    <li class="tags">
+                                        <a href="/posts?action=get-items&item={{creator_details.identifier}}&key=creator"
+                                            class="bg-primary light">
+                                            <i class="fas fa-eye"></i>
+                                            posts
+                                        </a>
+                                    </li>
+                                    <li class="tags">
+                                        <a href="/configs?creator={{creator_details.identifier}}&tab=images"
+                                            class="bg-primary light">
+                                            <i class="fas fa-image"></i>
+                                            images
+                                        </a>
+                                    </li>
+                                    <li class="tags">
+                                        <a href="/configs?creator={{creator_details.identifier}}&tab=captions"
+                                            class="bg-primary light">
+                                            <i class="fas fa-tasks"></i>
+                                            captions
+                                        </a>
+                                    </li>
+                                    <li data-action="delete" data-action-url="/delete-items/creators" 
+                                    data-action-message="Deleting creator {{creator.id}}"
+                                    data-item="{{creator.id}}" data-action-target="{{creator.id}}"
+                                    onclick="handleAction(this,'creators-table','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    {%endfor%}
+                    <div class="table-row table-bottom">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/creators" 
+                                data-action-message="Deleting creators" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'creators-table','multiple')">
+                                Delete
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {%endif%}
+    {%if tasks|length > 0%}
+        <section class="tasks">
+            <h3 class="header">
+                Tasks
+            </h3>
+            <div class="holder table-container scroll scroll-v scroll-h" id="tasks-table">
+                <div class="table-header">
+                    <div class="table-row">
+                    <div class="table-cell check-box">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'tasks-table')">
+                    </div>              
+                    <div class="table-cell">ID</div>
+                    <div class="table-cell">Action count</div>
+                    <div class="table-cell double-cell">Date</div>
+                    <div class="table-cell badge">Status</div>
+                    <div class="table-cell actions">Actions</div>
+                    </div>
+                </div>
+                <div class="table-body">
+                    {%for task in tasks%}
+                        <div data-action-url="{{ url_for('tasks',action='view-item',task=task.id) }}" 
+                            class="table-row" data-item="{{task.id}}" data-action-target="{{task.creator}}" id="{{task.id}}">
+                            <div class="table-cell check-box">
+                                <input type="checkbox" class="checkbox-row">
+                            </div>
+                            <div class="table-cell">
+                                {{ task.id }}
+                        </div>  
+                            <div class="table-cell">{{ task.action_count}}</div>                             
+                            <div class="table-cell double-cell">{{ task.created_at}}</div>
+                            <div class="table-cell badge task_status">
+                                <span class="
+                                {%if task.status|lower in ['success','completed','running']%}bg-success
+                                {%elif task.status|lower in ['error','canceled','cancelled','failed','cancelling']%}bg-danger
+                                {%elif task.status|lower == 'pending'%}bg-warning
+                                {%endif%}">
+                                    {{task.status|capitalize}}
+                                </span>
+                            </div>
+                            <div class="table-cell actions">
+                                <ul class="actions-list">
+                                    <li class="tags">
+                                        <a href="/{{task.type}}?action=get-items&item={{task.id}}&key=task_id"
+                                            class="bg-primary light">
+                                            <i class="fas fa-eye"></i>
+                                            {{task.type}}
+                                        </a>
+                                    </li>
+                                    <li data-action="delete" data-action-url="/delete-items/tasks" 
+                                    data-action-message="Deleting Task {{task.id}}"
+                                    data-item="{{task.id}}" data-action-target="{{task.creator}}"
+                                    onclick="handleAction(this,'tasks-table','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                    {%if task.status|lower in ['running','pending']%}
+                                        <li data-action="stop" data-action-url="/task/stop" 
+                                            data-action-message="Stopping Task {{task.id}}"
+                                            data-item="{{task.id}}" data-action-target="{{task.creator}}"
+                                            onclick="handleAction(this,'tasks-table','single')">
+                                            <i class="fas fa-stop text-danger"></i>
+                                        </li>
+                                    {%endif%}
+                                </ul>
+                            </div>
+                        </div>
+                    {%endfor%}
+                    <div class="table-row table-bottom">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/tasks" 
+                                data-action-message="Deleting tasks" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'tasks-table','multiple')">
+                                Delete
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {%endif%}
+{%endblock%}

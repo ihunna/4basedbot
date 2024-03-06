@@ -1,0 +1,122 @@
+{% extends "layout.html"%}
+{% block title %}
+    Item details | Monitor prices
+{% endblock %}
+{%block trail%}>   item details{%endblock%}
+{%block main_content%}
+    {%if action and action == 404%}
+        <h1 class="four-o-four">Item not found</h1>
+    {%else%}
+        {%if type == 'post'%}
+            <section class="item-details" id="items-section">
+                <div class="holder item-holder">
+                    <div class="item-header">
+                        <div class="header">
+                            <div class="sku">
+                                Post ID: {{item.id}}
+                            </div>
+                        </div>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>Creator:</strong>
+                            <span>{{item.creator}}</span>
+                        </li>
+                        {%if item.caption%}
+                            <li>
+                                <strong>Caption:</strong>
+                                <span>{{item.caption}}</span>
+                            </li>
+                        {%endif%}
+                        <li>
+                            <strong>Type:</strong>
+                            <span>{{item.type}}</span>
+                        </li>
+                        {%if item.type == 'schedule'%}
+                        <li>
+                            <strong>Schedule date:</strong>
+                            <span>{{item.schedule_date}}</span>
+                        </li>
+                        {%endif%}
+                        <li>
+                            <strong>Created date:</strong>
+                            <span>{{item.created_at}}</span>
+                        </li>
+                        <li>
+                            <strong>Price</strong>
+                            <span>${{item.price}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        {%elif type == 'task'%}
+            <section class="item-details" id="tasks-section">
+                <div class="holder item-holder">
+                    <div class="item-header">
+                        <div class="header">
+                            ID: {{item.id}}
+                        </div>
+                        <div class="actions">
+                            {%if item.status == 'pending'%}
+                                <div data-action="stop" data-action-url="/task/stop" 
+                                    data-action-message="Stopping Task {{item.id}}"
+                                    data-item="{{item.id}}" data-action-target="{{item.id}}"
+                                    onclick="handleAction(this,'tasks-table','single')"
+                                    class="text-danger">
+                                    <i class="fas fa-stop"></i>
+                                    Stop
+                                </div>
+                            {%endif%}
+                        </div>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>Status:</strong>
+                            <span>{{item.status}}</span>
+                        </li>
+                        <li>
+                            <strong>Created date:</strong>
+                            <span>{{item.created_at}}</span>
+                        </li>
+
+                        <li>
+                            <strong>Message:</strong>
+                            <span>{{item.message}}</span>
+                        </li>
+                       
+                    </ul>
+                </div>
+            </section>
+
+        {%elif type == 'admin'%}
+            <section class="item-details" id="admin-section">
+                <div class="holder item-holder">
+                    <div class="item-header">
+                        <div class="header">
+                            ID: {{item.id}}
+                        </div>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>Email:</strong>
+                            <span>{{item.email}}</span>
+                        </li>
+                        <li>
+                            <strong>Role:</strong>
+                            <span>{{item.role}}</span>
+                        </li>
+                        <li>
+                            <strong>Status:</strong>
+                            <span>{{item.status}}</span>
+                        </li>
+                        <li>
+                            <strong>Created date:</strong>
+                            <span>{{item.created_at}}</span>
+                        </li>
+                    
+                    </ul>
+                </div>
+            </section>
+        {%endif%}
+    {%endif%}
+{%endblock%}

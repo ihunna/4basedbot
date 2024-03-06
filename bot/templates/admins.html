@@ -1,0 +1,143 @@
+{% extends "layout.html"%}
+{% block title %}
+    Admins
+{% endblock %}
+{%block main_content%}
+    {%if action and action == 'edit-admin'%}
+        <section class="edit-admin">
+            <div class="holder form-holder">
+                <form action="" id="admins-form" data-action="Edit admin" 
+                    data-action-url="/admins/update" data-action-message="Updating admin..." 
+                    data-next-action-url="/admins?action=view-item&admin={{admin.id}}">
+                    <h3 class="form-header">
+                        Fill the form to edit admin details.
+                    </h3>
+                    <div class="input-container">
+                        <input type="email" id="email" name="email" value="{{admin.email}}" autofocus tocomplete="email" required>
+                        <label for="email">Admin email</label>
+                    </div>
+                    <div class="input-container">
+                        <input type="text" id="password" name="password" value="{{admin.plain_password}}" tocomplete="password" required>
+                        <label for="password">Admin password</label>
+                    </div>
+                    <div class="input-container">
+                        <select name="status" id="status" required>
+                            <option value="active" {%if admin.status == 'active'%}selected{%endif%}>Active</option>
+                            <option value="blocked" {%if admin.status == 'blocked'%}selected{%endif%}>Blocked</option>
+                        </select>
+                    </div>
+                    <div class="input-container">
+                        <select name="role" id="role" required>
+                            <option value="admin" {%if admin.role == 'admin'%}selected{%endif%}>Admin</option>
+                            <option value="super-admin" {%if admin.role == 'super-admin'%}selected{%endif%}>Super admin</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="admin" value="{{admin.id}}">
+                    <div class="input-container flex">
+                        <input type="submit" value="Update">
+                    </div>
+                </form>
+            </div>
+        </section>
+    {%else%}
+        {%if admins|length > 0%}
+            <section class="admins">
+                <div class="configs-nav scroll scroll-h">
+                    <ul>
+                        <li class="{%if tab=='all'%} active {%endif%}">
+                            <a href="/admins?tab=all">
+                                All
+                            </a>
+                        </li>
+                        <li class="{%if tab=='me'%} active {%endif%}">
+                            <a href="/admins?tab=me">
+                                Me
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="holder table-container scroll scroll-v scroll-h" id="admins-table">
+                    <div class="table-header">
+                        <div class="table-row">
+                        <div class="table-cell check-box">
+                            <input type="checkbox" id="check-all" onclick="selectAll(this,'admins-table')">
+                        </div>              
+                        <div class="table-cell double-cell">Email</div>
+                        <div class="table-cell badge">Role</div>
+                        <div class="table-cell badge">Status</div>
+                        <div class="table-cell double-cell">Date</div>
+                        <div class="table-cell actions">Actions</div>
+                        </div>
+                    </div>
+                    <div class="table-body">
+                        {%for admin in admins%}
+                            <div data-action-url="{{ url_for('admins',action='view-item',admin=admin.id) }}" 
+                                class="table-row" data-item="{{admin.id}}" data-action-target="{{admin.id}}" id="{{admin.id}}">
+                                <div class="table-cell check-box">
+                                    <input type="checkbox" class="checkbox-row">
+                                </div>
+                                <div class="table-cell double-cell">{{ admin.email}}</div>
+                                <div class="table-cell badge">
+                                    <span class="bg-primary">
+                                        {{admin.role}}
+                                    </span>
+                                </div>
+                                <div class="table-cell badge">
+                                    <span class="{%if admin.status == 'active'%}bg-success {%else%}bg-danger{%endif%}">
+                                        {{admin.status}}
+                                    </span>
+                                </div>                             
+                                <div class="table-cell ">{{admin.created_at}}</div>
+                                <div class="table-cell actions">
+                                    <ul class="actions-list">
+                                        <li class="tags">
+                                            <a href="/posts?action=get-items&item={{admin.id}}&key=admin"
+                                                class="bg-primary light">
+                                                <i class="fas fa-eye"></i>
+                                                posts
+                                            </a>
+                                        </li>
+                                        {%if admin.role == 'super-admin'%}
+                                            <li data-action="delete" data-action-url="/delete-items/admins" 
+                                            data-action-message="Deleting admin {{admin.id}}"
+                                            data-item="{{admin.id}}" data-action-target="{{admin.id}}"
+                                            onclick="handleAction(this,'admins-table','single')">
+                                                <i class="fas fa-trash text-danger"></i>
+                                            </li>
+                                            <li>
+                                                <a href="{{ url_for('admins', action='edit-admin',admin=admin.id) }}">
+                                                    <i class="fas fa-edit text-secondary"></i>
+                                                </a>
+                                            </li>
+                                        {%endif%}
+                                    </ul>
+                                </div>
+                            </div>
+                        {%endfor%}
+                        <div class="table-row table-bottom">
+                            <div class="bottom-actions show">
+                                <div data-action="delete" data-action-url="/delete-items/admins" 
+                                    data-action-message="Deleting admins" 
+                                    class="action delete bg-danger light" onclick="handleAction(this,'admins-table','multiple')">
+                                    Delete
+                                </div>
+                            </div>
+                            <div class="bottom-nav">
+                                <div class="sum-total">{{current_page}} / {{total_admins}}</div>
+                                <div class="more-less">
+                                    <a href="/admins?page={{prev_page}}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    &nbsp; &nbsp;
+                                    <a href="/admins?page={{next_page}}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {%endif%}
+    {%endif%}
+{%endblock%}

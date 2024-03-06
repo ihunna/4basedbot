@@ -1,0 +1,8 @@
+.env
+*.db
+bot/creators.json
+venv
+test.py
+proxies.txt
+flask_session
+settings

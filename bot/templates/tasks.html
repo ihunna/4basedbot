@@ -1,0 +1,94 @@
+{% extends "layout.html"%}
+{% block title %}
+    Tasks
+{% endblock %}
+{%block main_content%}
+    {%if tasks|length > 0%}
+        <section class="tasks">
+            <div class="holder table-container scroll scroll-v scroll-h" id="tasks-table">
+                <div class="table-header">
+                    <div class="table-row">
+                    <div class="table-cell check-box">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'tasks-table')">
+                    </div>              
+                    <div class="table-cell">ID</div>
+                    <div class="table-cell">Action count</div>
+                    <div class="table-cell double-cell">Date</div>
+                    <div class="table-cell badge">Status</div>
+                    <div class="table-cell actions">Actions</div>
+                    </div>
+                </div>
+                <div class="table-body">
+                    {%for task in tasks%}
+                        <div data-action-url="{{ url_for('tasks',action='view-item',task=task.id) }}" 
+                            class="table-row" data-item="{{task.id}}" data-action-target="{{task.creator}}" id="{{task.id}}">
+                            <div class="table-cell check-box">
+                                <input type="checkbox" class="checkbox-row">
+                            </div>
+                            <div class="table-cell">
+                                {{ task.id }}
+                          </div>  
+                            <div class="table-cell">{{ task.action_count}}</div>                             
+                            <div class="table-cell double-cell">{{ task.created_at}}</div>
+                            <div class="table-cell badge task_status">
+                                <span class="
+                                {%if task.status|lower in ['success','completed','running']%}bg-success
+                                {%elif task.status|lower in ['error','canceled','cancelled','failed','cancelling']%}bg-danger
+                                {%elif task.status|lower == 'pending'%}bg-warning
+                                {%endif%}">
+                                    {{task.status|capitalize}}
+                                </span>
+                            </div>
+                            <div class="table-cell actions">
+                                <ul class="actions-list">
+                                    <li class="tags">
+                                        <a href="/{{task.type}}?action=get-items&item={{task.id}}&key=task_id"
+                                            class="bg-primary light">
+                                            <i class="fas fa-eye"></i>
+                                            {{task.type}}
+                                        </a>
+                                    </li>
+                                    <li data-action="delete" data-action-url="/delete-items/tasks" 
+                                    data-action-message="Deleting Task {{task.id}}"
+                                    data-item="{{task.id}}" data-action-target="{{task.creator}}"
+                                    onclick="handleAction(this,'tasks-table','single')">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </li>
+                                    {%if task.status|lower in ['running','pending']%}
+                                        <li data-action="stop" data-action-url="/task/stop" 
+                                            data-action-message="Stopping Task {{task.id}}"
+                                            data-item="{{task.id}}" data-action-target="{{task.creator}}"
+                                            onclick="handleAction(this,'tasks-table','single')">
+                                            <i class="fas fa-stop text-danger"></i>
+                                        </li>
+                                    {%endif%}
+                                </ul>
+                            </div>
+                        </div>
+                    {%endfor%}
+                    <div class="table-row table-bottom">
+                        <div class="bottom-actions show">
+                            <div data-action="delete" data-action-url="/delete-items/tasks" 
+                                data-action-message="Deleting tasks" 
+                                class="action delete bg-danger light" onclick="handleAction(this,'tasks-table','multiple')">
+                                Delete
+                            </div>
+                        </div>
+                        <div class="bottom-nav">
+                            <div class="sum-total">{{ current_page}} / {{total_tasks}}</div>
+                            <div class="more-less">
+                                <a href="{{ url_for('tasks', page=prev_page) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                                &nbsp; &nbsp;
+                                <a href="{{ url_for('tasks', page=next_page) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {%endif%}
+{%endblock%}
