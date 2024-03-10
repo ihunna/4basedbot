@@ -100,6 +100,7 @@ def admins():
 					action=action, 
 					tab=tab,
 					admins=admins,
+					session_admin=session['USER'],
 					total_admins=total_admins,
 					next_page=next_page,
 					prev_page=prev_page,

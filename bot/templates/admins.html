@@ -97,7 +97,7 @@
                                                 posts
                                             </a>
                                         </li>
-                                        {%if admin.role == 'super-admin'%}
+                                        {%if session_admin and session_admin.role == 'super-admin'%}
                                             <li data-action="delete" data-action-url="/delete-items/admins" 
                                             data-action-message="Deleting admin {{admin.id}}"
                                             data-item="{{admin.id}}" data-action-target="{{admin.id}}"
