@@ -46,7 +46,7 @@ server_key = os.getenv('SERVER_KEY')
 # Configure application
 app = Flask(__name__)
 app.debug = True
-host = 'http://127.0.0.1:5000'
+host = 'http://4basedmanager.com/'
 CORS(app,origins=host)
 socketio = SocketIO(app)
 
