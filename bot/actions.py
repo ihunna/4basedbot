@@ -395,7 +395,7 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(creators):
+			elif completed == len(creators) and len(creators) > 1:
 				task_status = 'success'
 				client_msg = {'msg':f'{task_id} successful ','status':'success','type':'message'}
 				
