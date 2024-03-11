@@ -41,13 +41,15 @@
                             </div>
                             <div class="table-cell actions">
                                 <ul class="actions-list">
-                                    <li class="tags">
-                                        <a href="/{{task.type}}?action=get-items&item={{task.id}}&key=task_id"
-                                            class="bg-primary light">
-                                            <i class="fas fa-eye"></i>
-                                            {{task.type}}
-                                        </a>
-                                    </li>
+                                    {%if task.status == 'success'%}
+                                        <li class="tags">
+                                            <a href="/{{task.type}}?action=get-items&item={{task.id}}&key=task_id"
+                                                class="bg-primary light">
+                                                <i class="fas fa-eye"></i>
+                                                {{task.type}}
+                                            </a>
+                                        </li>
+                                    {%endif%}
                                     <li data-action="delete" data-action-url="/delete-items/tasks" 
                                     data-action-message="Deleting Task {{task.id}}"
                                     data-item="{{task.id}}" data-action-target="{{task.creator}}"

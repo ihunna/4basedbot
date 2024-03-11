@@ -347,8 +347,8 @@ class _4BASED:
 					if not success:raise Exception(task_status)
 					if task_status['status'].lower() in ['cancelled','canceled']:break
 
-				future = executor.submit(self.post, *arg)
-				futures.append(future)
+					future = executor.submit(self.post, *arg)
+					futures.append(future)
 
 				for future in as_completed(futures):
 					success,task_status = Utils.check_task_status(task_id)
