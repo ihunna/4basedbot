@@ -332,7 +332,7 @@ class _4BASED:
 
 			creators = [creator for creator in creators if 'verified' in creator['data']['details']['user'].keys()]
 			if len(creators) < 1: raise Exception('No creator added, please add 1 or more creators first')
-			
+
 			with ThreadPoolExecutor(max_workers=max_workers) as executor:
 				args = [(
 					task,
@@ -389,7 +389,7 @@ class _4BASED:
 		except Exception as error:
 			Utils.write_log(error)
 			task_status = 'failed'
-			task_msg = f'Error adding creators on {task_id} : {error}'
+			task_msg = f'Error starting posts on {task_id} : {error}'
 		
 		finally:
 			if task_status == 'canceled':
