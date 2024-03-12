@@ -128,6 +128,7 @@ def handle_admin(action):
 			success,msg = Utils.update_admin(admin_id,{
 				'email':email,
 				'password':password_hash,
+				'plain_password':password,
 				'role':role,
 				'status':status
 			})
