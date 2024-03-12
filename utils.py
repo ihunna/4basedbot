@@ -104,9 +104,9 @@ class Utils:
 	@staticmethod
 	def create_tables():
 		success,msg = False,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			cursor.execute('''
 				CREATE TABLE IF NOT EXISTS admins (
 					id TEXT PRIMARY KEY,
@@ -162,6 +162,8 @@ class Utils:
 	@staticmethod
 	def add_admin(admin_id,admin_data):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
 			email = admin_data['email']
 			password = admin_data['password']
@@ -169,8 +171,6 @@ class Utils:
 			role = admin_data['role']
 			status = admin_data['status']
 
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			cursor.execute("""INSERT INTO admins 
 				  (id, email, password, plain_password, role, status) 
 				  VALUES (?, ?, ?, ?, ?, ?)""", 
@@ -187,9 +187,9 @@ class Utils:
 	@staticmethod
 	def delete_admin(admin_id):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute('DELETE FROM admins WHERE id = ?', (admin_id,))
 			conn.commit()
@@ -205,6 +205,8 @@ class Utils:
 	@staticmethod
 	def update_admin(admin_id, admin_data):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
 			email = admin_data['email']
 			password = admin_data['password']
@@ -212,8 +214,6 @@ class Utils:
 			role = admin_data['role']
 			status = admin_data['status']
 
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			
 			cursor.execute(""" UPDATE admins 
 				  SET email = ?, 
@@ -235,9 +235,9 @@ class Utils:
 	@staticmethod
 	def get_admins(limit=20, offset=0,multiple=True,admin=None,keyword=None):
 		success, admins, total_admins = True, [], 0
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			if multiple:
 				cursor.execute("SELECT COUNT(*) FROM admins")
@@ -281,9 +281,9 @@ class Utils:
 	@staticmethod
 	def add_creator(creator_id,creator_data,admin):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			cursor.execute("INSERT INTO creators (id, data, admin) VALUES (?, ?, ?)", (creator_id,json.dumps(creator_data),admin))
 			conn.commit()
 			
@@ -297,9 +297,9 @@ class Utils:
 	@staticmethod
 	def delete_creator(creator_id):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute('DELETE FROM creators WHERE id = ?', (creator_id,))
 			conn.commit()
@@ -315,9 +315,9 @@ class Utils:
 	@staticmethod
 	def update_creator(creator_id,creator_data):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			
 			cursor.execute("UPDATE creators SET data = ? WHERE id = ?", (json.dumps(creator_data),creator_id))
 			conn.commit()
@@ -332,9 +332,9 @@ class Utils:
 	@staticmethod
 	def get_creators(admin='',limit=20, offset=0,multiple=True,creator=None):
 		success, creators, total_creators = True, [], 0
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			if multiple:
 				cursor.execute("SELECT COUNT(*) FROM creators WHERE admin = ?",(admin,))
@@ -367,9 +367,9 @@ class Utils:
 	@staticmethod
 	def add_task(task_id, task):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			admin = task['admin']
 			status = task['status']
@@ -392,9 +392,9 @@ class Utils:
 	@staticmethod
 	def delete_task(task_id):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
 			conn.commit()
@@ -410,9 +410,9 @@ class Utils:
 	@staticmethod
 	def update_task(task_id, task):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			status,message = task['status'], task['message']
 			
 			cursor.execute("UPDATE tasks SET status = ?, message = ? WHERE id = ?", (status,message,task_id))
@@ -428,9 +428,9 @@ class Utils:
 	@staticmethod
 	def check_task_status(task_id):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
 			row = cursor.fetchall()
@@ -460,9 +460,9 @@ class Utils:
 	@staticmethod
 	def get_tasks(admin='', limit=20, offset=0):
 		success, tasks, total_tasks = True, [], 0
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute("SELECT COUNT(*) FROM tasks WHERE admin = ?", (admin,))
 			total_tasks = cursor.fetchone()[0]
@@ -489,10 +489,9 @@ class Utils:
 	@staticmethod
 	def add_post(admin,post):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
-
 			post_id = post['id']
 			creator = post['creator']
 			creator_username = post['creator_username']
@@ -530,9 +529,9 @@ class Utils:
 	@staticmethod
 	def delete_post(post_id):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 
 			cursor.execute('DELETE FROM posts WHERE id = ?', (post_id,))
 			conn.commit()
@@ -548,13 +547,13 @@ class Utils:
 	@staticmethod
 	def update_post(post_id, post):
 		success,msg = True,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
 			schedule_date = post['schedule_date']
 			price = post['price']
 			caption = post['caption']
 
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
 			
 			cursor.execute(
 				"""UPDATE posts 
@@ -574,11 +573,9 @@ class Utils:
 	@staticmethod
 	def get_posts(admin='',limit=20, offset=0,constraint=None,keyword=None):
 		success, posts, total_posts = True, [], 0
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
 		try:
-			conn = sqlite3.connect(db_file)
-			cursor = conn.cursor()
-
-			
 			if constraint is not None and keyword is not None:
 				cursor.execute(f"SELECT COUNT(*) FROM posts WHERE {constraint} = ? AND admin = ?", (keyword, admin))
 				total_posts = cursor.fetchone()[0]
