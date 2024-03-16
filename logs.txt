@@ -3122,3 +3122,123 @@ t +++
 [2024-03-05 22:37:44] [LOG] Task successflly created
 [2024-03-05 22:37:44] [LOG] === Post creation started for A473e9f8 ===
 [2024-03-05 22:37:47] [LOG] +++ creating post +++
+[2024-03-16 16:03:59] [LOG] === Add creators started for 8cd02d47 ===
+[2024-03-16 16:03:59] [LOG] client updated
+[2024-03-16 16:03:59] [LOG] Task successflly created
+[2024-03-16 16:04:57] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 16:05:10] [LOG] === Add creators started for 9e8075a4 ===
+[2024-03-16 16:05:10] [LOG] client updated
+[2024-03-16 16:05:10] [LOG] Task successflly created
+[2024-03-16 16:05:23] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 16:05:57] [LOG] === Add creators started for D8f4958a ===
+[2024-03-16 16:05:57] [LOG] client updated
+[2024-03-16 16:05:57] [LOG] Task successflly created
+[2024-03-16 16:29:03] [LOG] [{'id': 'weagetofi1977@gmail.com', 'data': {'status': 'Online', 'details': {'credentials': {'token': 'eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwiemlwIjoiREVGIn0.FiLsIr3YGHGKUTtOPMBazu9b7VY9cnCNvtJwVHLIRkRHhK_lcYvom6mTW9zLYx-N0D01y_e9-n-dsc_tfb75fkPBqFnPnXLP3Obx_ON_U4OMDnj3qFMSHkPQBGCojvm7UBXHVWLCMfvOikILGnnH6AcXTALnbaan4Fu1hr7zFhkaXnumigVxw_fQl_joByqrRXuZ1pNJxcuK5Hd1UX_gZmujJ3j2vfWBVmQwxkUC-4dXdTLtvi334waq9XFA8DtAP6EqQ4TwzPRHsGf63VwYQz8QvHz6y1I8TGuWbzz4nRrOHRQGFhtyvjrFSidiY3A3-TfBzHuJqQ1ZlvkOh0swNg.pfJ77QsSslQIxDO8gTq58Q.nftznootBr4BqukqGJXSjp7of-iKfRls9RV1vMdemXUPSOn0Un7oCXRZD3rdsVAJMyhAPrHCJmOtgKy2AMX_lVP6uJNbFFKHeHlwxdgIfG2LvCk_ym0KQCICjk0gskGXHgZgNwIC6nYBvx3bjMgbnAgg4vhk-Jz3gjILNqZpLMJB2tVYq6eWId7P9AYIplpSCFTXc0I71x4oONCNZcFUPA.RW5t2n44Qwv8fJWqsoZvkClnifRZgTwmH4ZmNETFvAE', 'resource': 'BKYMlCRJMR'}, 'user': {'_id': '65ae3ffe76add23e8b010758', 'name': 'liahottest', 'identifier': 'weagetofi1977@gmail.com', 'status': 'free', 'confirmation_code': 'OgaCN5liLEmVyGgfjqi7', 'notification_settings': ['comment', 'like', 'sale', 'tip', 'subscription', 'chat', 'message', 'follow', 'content', 'mention'], 'locale': 'en', 'updated_at': '2024-03-12 14:10:16', 'created_at': '2024-01-22 10:14:22', 'role_ids': ['5ef3e9c11f46d95694109763', '629f0378d6aca4aafa096308'], 'following_count': 8, 'last_login': '2024-03-16 15:06:00', 'last_login_from': 'US', 'coins': 0, 'verification_status': 'approved', 'verified': True, 'last_logout': '2024-03-12 14:10:16', 'summary_notification_interval_settings': 'weekly', 'summary_notification_settings': ['unread_messages', 'file_stack_sales', 'chat_file_stack_sales', 'new_subscriptions', 'deleted_subscriptions', 'chat_unlocks', 'chat_tips', 'top_chat_tips', 'messages', 'top_messages'], 'feature': ['allow_nsfw'], 'share_coins': 0, 'file_stack_count': 56, 'last_activity': {'type': 'collection_upload', 'id': '65e790bfacf648a2300c3e74', 'executed_at': '2024-03-05 21:38:13'}, 'likes_count': 17, 'follower_count': 4, 'activity_count': 14, 'has_subscription_configuration': False, 'subscribed_user_ids': [], 'subscriber_user_ids': [], 'avatar': {'_id': '65c7ae12220ad87dce00b3f5', 'code': 'kjfibmvg4owz65ap', 'status': 'available', 'crop': {'x1': 0, 'y1': 77, 'x2': 720, 'y2': 797}, 'categories': ['avatar'], 'type': 'image/jpeg', 'fileStackType': 'image', 'user_id': '65ae3ffe76add23e8b010758', 'extension': 'jpeg', 'width': 720, 'height': 720, 'dominantColor': [203, 203, 199], 'created_at': '2024-02-10 17:10:42', 'status_media_controlled': 'ok', 'status_controlled': 'ok', 'filesystem_added': True, 'own': True}, 'follow_user_ids': [], 'fileStackWithPriceCount': 27, 'roles': [{'name': 'client'}, {'name': 'creator'}], 'password': 'lialoves', 'picture': 'https://pic.4based.com/preview/kjfibmvg4owz65ap/65c7ae12220ad87dce00b3f5/300x300.jpeg'}}, 'proxies': {'http': 'http://0s3rjOCIaFdAF7U:VkTkUyXotoZzRbz@107.180.165.138:43652', 'https': 'http://0s3rjOCIaFdAF7U:VkTkUyXotoZzRbz@107.180.165.138:43652'}, 'reuse_ip': True}, 'created_at': '2024-03-16 15:06:00'}]
+[2024-03-16 16:30:25] [LOG] === Add creators started for B2f736bb ===
+[2024-03-16 16:30:25] [LOG] Error logging in not enough values to unpack (expected 2, got 1) on weagetofi1977@gmail.com
+[2024-03-16 16:30:26] [LOG] client updated
+[2024-03-16 16:30:26] [LOG] Task successflly created
+[2024-03-16 16:35:21] [LOG] === Add creators started for 6bfb718e ===
+[2024-03-16 16:35:21] [LOG] Error logging in not enough values to unpack (expected 2, got 1) on weagetofi1977@gmail.com
+[2024-03-16 16:35:22] [LOG] client updated
+[2024-03-16 16:35:22] [LOG] Task successflly created
+[2024-03-16 16:36:22] [LOG] === Add creators started for C63a2cc7 ===
+[2024-03-16 16:36:22] [LOG] Error logging in not enough values to unpack (expected 2, got 1) on weagetofi1977@gmail.com
+[2024-03-16 16:36:23] [LOG] client updated
+[2024-03-16 16:36:23] [LOG] Task successflly created
+[2024-03-16 16:37:33] [LOG] === Add creators started for D0c5c66d ===
+[2024-03-16 16:37:33] [LOG] Error logging in not enough values to unpack (expected 2, got 1) on weagetofi1977@gmail.com
+[2024-03-16 16:37:34] [LOG] client updated
+[2024-03-16 16:37:34] [LOG] Task successflly created
+[2024-03-16 16:38:38] [LOG] === Add creators started for 0a7da357 ===
+[2024-03-16 16:38:39] [LOG] client updated
+[2024-03-16 16:38:39] [LOG] Task successflly created
+[2024-03-16 16:38:40] [LOG] Error logging in 'id' on weagetofi1977@gmail.com
+[2024-03-16 16:44:34] [LOG] === Add creators started for Faace49e ===
+[2024-03-16 16:44:36] [LOG] client updated
+[2024-03-16 16:44:36] [LOG] Task successflly created
+[2024-03-16 16:54:45] [LOG] === Add creators started for Bf2afd99 ===
+[2024-03-16 16:54:45] [LOG] client updated
+[2024-03-16 16:54:45] [LOG] Task successflly created
+[2024-03-16 17:28:51] [LOG] 'total_posts'
+[2024-03-16 17:29:56] [LOG] === Logging in creators ===
+[2024-03-16 17:29:56] [LOG] client updated
+[2024-03-16 17:29:56] [LOG] Task successflly created
+[2024-03-16 17:29:57] [LOG] === Post creation started for 16ACA8E5 ===
+[2024-03-16 17:30:00] [LOG] 'id'
+[2024-03-16 17:32:45] [LOG] === Logging in creators ===
+[2024-03-16 17:32:46] [LOG] client updated
+[2024-03-16 17:32:46] [LOG] Task successflly created
+[2024-03-16 17:32:46] [LOG] === Post creation started for 8A5C6941 ===
+[2024-03-16 17:32:49] [LOG] 'id'
+[2024-03-16 17:38:28] [LOG] === Logging in creators ===
+[2024-03-16 17:38:28] [LOG] client updated
+[2024-03-16 17:38:28] [LOG] Task successflly created
+[2024-03-16 17:38:28] [LOG] === Post creation started for B97F541F ===
+[2024-03-16 17:40:00] [LOG] === Logging in creators ===
+[2024-03-16 17:40:01] [LOG] client updated
+[2024-03-16 17:40:01] [LOG] Task successflly created
+[2024-03-16 17:40:01] [LOG] === Post creation started for 97CB1D12 ===
+[2024-03-16 17:43:29] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:44:11] [LOG] === Add creators started for 4f4be3b9 ===
+[2024-03-16 17:44:12] [LOG] client updated
+[2024-03-16 17:44:12] [LOG] Task successflly created
+[2024-03-16 17:45:42] [LOG] === Logging in creators ===
+[2024-03-16 17:45:43] [LOG] client updated
+[2024-03-16 17:45:43] [LOG] Task successflly created
+[2024-03-16 17:45:43] [LOG] === Post creation started for 8249C2B6 ===
+[2024-03-16 17:47:23] [LOG] === Logging in creators ===
+[2024-03-16 17:47:24] [LOG] client updated
+[2024-03-16 17:47:24] [LOG] Task successflly created
+[2024-03-16 17:47:24] [LOG] === Post creation started for 8731D670 ===
+[2024-03-16 17:47:24] [LOG] === Post creation started for 8731D670 ===
+[2024-03-16 17:47:27] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:47:27] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:48:28] [LOG] === Logging in creators ===
+[2024-03-16 17:48:29] [LOG] client updated
+[2024-03-16 17:48:29] [LOG] Task successflly created
+[2024-03-16 17:48:29] [LOG] === Post creation started for 8C0EA1CC ===
+[2024-03-16 17:48:29] [LOG] === Post creation started for 8C0EA1CC ===
+[2024-03-16 17:48:29] [LOG] === Post creation started for 8C0EA1CC ===
+[2024-03-16 17:48:29] [LOG] === Post creation started for 8C0EA1CC ===
+[2024-03-16 17:48:32] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:48:32] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:48:32] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:48:32] [LOG] Not enough images to match 1 on liahottest
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:49:03] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\weagetofi1977@gmail.com
+[2024-03-16 17:52:10] [LOG] === Add creators started for Fb8e4cd8 ===
+[2024-03-16 17:52:10] [LOG] Error logging in Error getting creators:no such column: email on weagetofi1977@gmail.com
+[2024-03-16 17:52:11] [LOG] client updated
+[2024-03-16 17:52:11] [LOG] Task successflly created
+[2024-03-16 18:02:16] [LOG] === Add creators started for Efc846e2 ===
+[2024-03-16 18:02:16] [LOG] client updated
+[2024-03-16 18:02:16] [LOG] Task successflly created
+[2024-03-16 18:02:19] [LOG] Error logging in Utils.add_creator() missing 1 required positional argument: 'admin' on weagetofi1977@gmail.com
+[2024-03-16 18:03:27] [LOG] === Add creators started for Cddefb29 ===
+[2024-03-16 18:03:28] [LOG] client updated
+[2024-03-16 18:03:28] [LOG] Task successflly created
+[2024-03-16 18:03:31] [LOG] Error logging in Error adding creator :3 values for 4 columns on weagetofi1977@gmail.com
+[2024-03-16 18:05:09] [LOG] === Add creators started for 2168a1aa ===
+[2024-03-16 18:05:10] [LOG] client updated
+[2024-03-16 18:05:10] [LOG] Task successflly created
+[2024-03-16 18:06:12] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\96F13FE8
+[2024-03-16 18:06:29] [LOG] === Add creators started for 44e6ca03 ===
+[2024-03-16 18:06:30] [LOG] client updated
+[2024-03-16 18:06:30] [LOG] Task successflly created
+[2024-03-16 18:07:09] [LOG] === Logging in creators ===
+[2024-03-16 18:07:10] [LOG] client updated
+[2024-03-16 18:07:10] [LOG] Task successflly created
+[2024-03-16 18:07:10] [LOG] === Post creation started for F58DE2A4 ===
+[2024-03-16 18:07:13] [LOG] +++ creating post +++
+[2024-03-16 18:07:46] [LOG] === Logging in creators ===
+[2024-03-16 18:07:47] [LOG] client updated
+[2024-03-16 18:07:47] [LOG] Task successflly created
+[2024-03-16 18:07:47] [LOG] === Post creation started for 56C0CDD1 ===
+[2024-03-16 18:07:50] [LOG] +++ creating post +++

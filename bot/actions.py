@@ -48,9 +48,12 @@ class Creator:
 				'locale': 'en',
 			}
 
-			success,user,_ = Utils.get_creators(multiple=False,creator=email)
+			success,user = Utils.check_creator(email,admin)
 			if not success:raise Exception(user)
+
+			creator_id = user.get('id',None)
 			user = user.get('data',{})
+
 			if len(user.items()) >= 1:new_user = False
 
 			if reuse_ip and 'proxies' in user.keys():
@@ -83,21 +86,22 @@ class Creator:
 				user['proxies'] = proxies
 				user['reuse_ip'] = reuse_ip
 
-				success,result = True,user
-
 			if new_user:
-				success,msg = Utils.add_creator(email,user,admin)
+				creator_id = str(uuid.uuid4()).upper()[:8]
+				success,msg = Utils.add_creator(creator_id,email,user,admin)
 
-				images_folder = os.path.join(configs_folder,email,'images')
-				captions_file = os.path.join(configs_folder,email,'captions.txt')
+				images_folder = os.path.join(configs_folder,creator_id,'images')
+				captions_file = os.path.join(configs_folder,creator_id,'captions.txt')
 				
 				os.makedirs(images_folder,exist_ok=True)
 				with open(captions_file, 'w') as file:file.write("")
 
 			else:
-				success,msg = Utils.update_creator(email,user)
+				success,msg = Utils.update_creator(creator_id,email,user)
 			if not success:raise Exception(msg)
 
+			user['id'] = creator_id
+			success,result = True,user
 			return success,result
 		
 		except Exception as error:
@@ -233,80 +237,14 @@ class Creator:
 		
 	def update(self,user:dict,data:dict):
 		try:
-			email = user['details']['user']['identifier']
+			user_id,user = user['id'],user['data']
 			for key,value in data.items():
 				user[key] = value
-			success,msg = Utils.update_creator(email,user)
+			success,msg = Utils.update_creator(user_id,user)
 			if not success:raise Exception(msg)
 			return True,user
 		except Exception as error:
 			return False, error
-		
-	def update_post(self,user:dict,post_id:str,post_data:dict={},edit=True):
-		try:
-			user_agent = Utils.generate_user_agent('android',1)
-			token,auth_resource = user['details']['credentials']['token'],user['details']['credentials']['resource']
-			username = user['details']['user']['name']
-			email = user['details']['user']['identifier']
-			user_id = user['details']['user']['_id']
-
-			self.headers.update({
-				'user-agent': user_agent,
-				'x-auth-resource': auth_resource,
-				'x-auth-token':token
-			})
-
-			if user['reuse_ip'] and 'proxies' in user.keys():
-				proxies = user['proxies']
-			else: proxies = random.choice(self.proxies)
-
-			if edit:
-				schedule_date = post_data['schedule_date']
-				price = post_data['price']
-
-				tax = (price / 100) * 20
-				_price = round((price + tax) * 100 if price > 1 else price)
-
-				success,_schedule_date,schedule_date = Utils.get_schedule_date(schedule_date)
-				if not success:raise Exception(_schedule_date)
-
-				json_data = {
-					'description': post_data['caption'],
-					'tag': [],
-					'price': _price,
-					'to_be_posted_at': _schedule_date,
-				}
-
-				response = requests.put(
-					f'https://rest.4based.com/api/1.0/user/{user_id}/file-stack/{post_id}',
-					headers=self.headers,
-					proxies=proxies,
-					json=json_data
-				)
-
-				if not response.ok:raise Exception(response.text)
-
-				post_data['schedule_date'] = schedule_date
-				success,msg = Utils.update_post(post_id,post_data)
-				if not success:raise Exception(msg)
-
-				return True, f'{post_id} on {username} updated successfully'
-			
-			else:
-				response = requests.delete(
-					f'https://rest.4based.com/api/1.0/user/{user_id}/file-stack/{post_id}',
-					headers=self.headers,
-					proxies=proxies
-				)
-				if not response.ok:raise Exception(response.text)
-				
-				success,msg = Utils.delete_post(post_id)
-				if not success:raise Exception(msg)
-
-				return True, f'{post_id} on {username} deleted successfully'
-
-		except Exception as error:
-			return False,error
 		
 
 class _4BASED:
@@ -396,7 +334,7 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(creators) and len(creators) > 1:
+			elif completed == len(creators) and len(creators) > 0:
 				task_status = 'success'
 				client_msg = {'msg':f'{task_id} successful ','status':'success','type':'message'}
 				
@@ -444,8 +382,8 @@ class _4BASED:
 			success,creator = Creator().login(admin,creator_email,creator_password,task_id=task_id)
 			if not success:raise Exception(creator)
 
-			images_folder = os.path.join(configs_folder,creator_email,'images')
-			total_images = sum([day['image_count'] for day in post_data])
+			images_folder = os.path.join(configs_folder,creator['id'],'images')
+			total_images = sum([post['image_count'] for post in post_data])
 
 			success,images = Utils.get_images(images_folder,all=False,image_count=total_images)
 			if not success:raise Exception(images)
@@ -455,7 +393,7 @@ class _4BASED:
 			success,post_data = Utils.share_images(post_data,images)
 			if not success:raise Exception(post_data)
 
-			captions_file = os.path.join(configs_folder,creator_email,'captions.txt')
+			captions_file = os.path.join(configs_folder,creator['id'],'captions.txt')
 			if not isfile(captions_file):raise Exception(f'Captions file does not exist for {creator_name}')
 
 			captions = []
@@ -532,7 +470,7 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(post_data):
+			elif completed == len(post_data) and len(post_data) > 0:
 				task_status = 'success'
 				client_msg = {'msg':f'{task_id} successful ','status':'success','type':'message'}
 				
@@ -622,7 +560,7 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(creators):
+			elif completed == len(creators) and len(creators) > 0:
 				task_status = 'success'
 				client_msg = {'msg':f'{task_id} successful','status':'success','type':'message'}
 				
@@ -655,3 +593,70 @@ class _4BASED:
 
 			success,msg = Utils.update_client({'task':task_data,'type':'task'})
 			if not success:Utils.write_log(msg)
+
+
+	def update_post(self,user:dict,post_id:str,post_data:dict={},edit=True):
+		try:
+			user_agent = Utils.generate_user_agent('android',1)
+			token,auth_resource = user['details']['credentials']['token'],user['details']['credentials']['resource']
+			username = user['details']['user']['name']
+			email = user['details']['user']['identifier']
+			user_id = user['details']['user']['_id']
+
+			self.headers.update({
+				'user-agent': user_agent,
+				'x-auth-resource': auth_resource,
+				'x-auth-token':token
+			})
+
+			if user['reuse_ip'] and 'proxies' in user.keys():
+				proxies = user['proxies']
+			else: proxies = random.choice(self.proxies)
+
+			if edit:
+				schedule_date = post_data['schedule_date']
+				price = post_data['price']
+
+				tax = (price / 100) * 20
+				_price = round((price + tax) * 100 if price > 1 else price)
+
+				success,_schedule_date,schedule_date = Utils.get_schedule_date(schedule_date)
+				if not success:raise Exception(_schedule_date)
+
+				json_data = {
+					'description': post_data['caption'],
+					'tag': [],
+					'price': _price,
+					'to_be_posted_at': _schedule_date,
+				}
+
+				response = requests.put(
+					f'https://rest.4based.com/api/1.0/user/{user_id}/file-stack/{post_id}',
+					headers=self.headers,
+					proxies=proxies,
+					json=json_data
+				)
+
+				if not response.ok:raise Exception(response.text)
+
+				post_data['schedule_date'] = schedule_date
+				success,msg = Utils.update_post(post_id,post_data)
+				if not success:raise Exception(msg)
+
+				return True, f'{post_id} on {username} updated successfully'
+			
+			else:
+				response = requests.delete(
+					f'https://rest.4based.com/api/1.0/user/{user_id}/file-stack/{post_id}',
+					headers=self.headers,
+					proxies=proxies
+				)
+				if not response.ok:raise Exception(response.text)
+				
+				success,msg = Utils.delete_post(post_id)
+				if not success:raise Exception(msg)
+
+				return True, f'{post_id} on {username} deleted successfully'
+
+		except Exception as error:
+			return False,error

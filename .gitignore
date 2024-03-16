@@ -6,3 +6,4 @@ test.py
 proxies.txt
 flask_session
 settings
+logs.txt

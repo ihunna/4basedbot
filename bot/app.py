@@ -171,7 +171,9 @@ def creators():
 					next_page=next_page,
 					prev_page=prev_page,
 					current_page=current_page)
-		else:return render_template('view-item.html', action=404)
+		else:
+			Utils.write_log(creators)
+			return render_template('view-item.html', action=404)
 	except Exception as error:
 		Utils.write_log(error)
 		abort(500)
@@ -259,8 +261,6 @@ def creator():
 			success, creator, _ = Utils.get_creators(multiple=False,creator=creator)
 			if not success:raise Exception(creator)
 			elif len(creator) < 1:return jsonify({'msg':'No such creator'}),404
-
-			creator = creator['data']
 
 			if key == 'reuse_ip' and status in ['yes','Yes','YES']:status = True 
 			elif key == 'reuse_ip' and status in ['no','No','NO']: status = False
@@ -390,51 +390,52 @@ def posts():
 def handle_posts(action):
 	try:
 		data = request.get_json()
-		total_days,max_workers,days = data['total_days'],data.get('max-workers'),[]
+		total_posts,max_workers,posts = data['total_posts'],data.get('max-workers'),[]
 
 		if action == 'add-post':
-			for day in range(1, total_days + 1):
-				day_data = {
-					f'image_count': int(data[f'day-{day}-image-count']),
-					f'paid_count': int(data[f'day-{day}-paid-count']),
-					f'price': data[f'day-{day}-price'],
-					f'caption': str(data.get(f'day-{day}-caption','')).replace('\n',''),
-					f'paid_caption': str(data.get(f'day-{day}-paid-caption','')).replace('\n',''),
-					f'caption_source':data[f'day-{day}-caption-source'],
-					f'run_type': data[f'day-{day}-run-type'],
-					f'schedule_date':data.get(f'day-{day}-schedule-date',None)
+			for post in range(1, total_posts + 1):
+				post_data = {
+					f'image_count': int(data[f'post-{post}-image-count']),
+					# f'paid_count': int(data[f'post-{post}-paid-count']),
+					f'price': data[f'post-{post}-price'],
+					f'caption': str(data.get(f'post-{post}-caption','')).replace('\n',''),
+					# f'paid_caption': str(data.get(f'day-{post}-paid-caption','')).replace('\n',''),
+					f'caption_source':data[f'post-{post}-caption-source'],
+					f'run_type': data[f'post-{post}-run-type'],
+					f'schedule_date':data.get(f'post-{post}-schedule-date',None)
 				}
 
-				if day_data['paid_count'] > 0:
-					paid_day = {
-						'image_count':day_data['paid_count'],
-						'price':day_data['price'],
-						'caption':day_data['paid_caption'] if day_data['paid_caption'] != '' else day_data['caption'],
-						'caption_source':day_data['caption_source'],
-						'run_type':day_data['run_type'],
-						'schedule_date':day_data['schedule_date']
-					}
-					days.append(paid_day)
+				# if post_data['paid_count'] > 0:
+				# 	paid_post = {
+				# 		'image_count':post_data['paid_count'],
+				# 		'price':post_data['price'],
+				# 		'caption':post_data['paid_caption'] if post_data['paid_caption'] != '' else post_data['caption'],
+				# 		'caption_source':post_data['caption_source'],
+				# 		'run_type':post_data['run_type'],
+				# 		'schedule_date':post_data['schedule_date']
+				# 	}
+				# 	posts.append(paid_post)
 				
-				free_day = {
-					'image_count':day_data["image_count"] - day_data["paid_count"] if day_data['paid_count'] > 0 else day_data['image_count'],
-					'price':0,
-					'caption':day_data['caption'],
-					'caption_source':day_data['caption_source'],
-					'run_type':day_data['run_type'],
-					'schedule_date':day_data['schedule_date']
-				}
-				if free_day['image_count'] > 0:days.append(free_day)
+				# free_post = {
+				# 	'image_count':post_data["image_count"] - post_data["paid_count"] if post_data['paid_count'] > 0 else post_data['image_count'],
+				# 	'price':0,
+				# 	'caption':post_data['caption'],
+				# 	'caption_source':post_data['caption_source'],
+				# 	'run_type':post_data['run_type'],
+				# 	'schedule_date':post_data['schedule_date']
+				# }
+				# if free_post['image_count'] > 0:posts.append(free_post)
+				posts.append(post_data)
 			
 			admin = session['USER']['id']
 
-			task_id = str(uuid.uuid4()).capitalize()[:8]
+			task_id = str(uuid.uuid4()).upper()[:8]
 
 			task_data = {
 				'id':task_id,
 				'admin':admin,
 				'status':'running',
-				'action_count':len(days),
+				'action_count':len(posts),
 				'type':'posts',
 				'message':f'Creating task on {admin}'
 			}
@@ -447,7 +448,7 @@ def handle_posts(action):
 					task_id,
 					task_data,
 					admin,
-					days,
+					posts,
 					int(max_workers) if max_workers != '' else 20
 				))
 			
@@ -461,7 +462,7 @@ def handle_posts(action):
 					Utils.write_log(msg)
 					Utils.write_log(f'Task successflly created')
 			
-				return jsonify({'days': days, 'msg': 'Post created successfully'}), 200
+				return jsonify({'days': posts, 'msg': 'Post created successfully'}), 200
 				
 			else:return jsonify({'msg': f'Could not start task {task_id}'}), 400
 		
@@ -477,7 +478,7 @@ def handle_posts(action):
 				}
 			post_id = data['post-id']
 			
-			success,msg = Creator().update_post(creator['data'],post_id,post_data=post_data)
+			success,msg = _4BASED().update_post(creator['data'],post_id,post_data=post_data)
 			if not success:raise Exception(msg)
 
 			return jsonify({'msg':'Post updated successfully'}),200

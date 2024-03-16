@@ -31,7 +31,7 @@
                         {%set creator_data = creator.data%}
                         {%set creator_details = creator_data.details.user%}
                         <div data-action-url="{{ url_for('creator',action='view-item',creator=creator.id) }}" 
-                            class="table-row" data-item="{{creator.id}}" data-action-target="{{creator_details.identifier}}" id="{{creator.id}}">
+                            class="table-row" data-item="{{creator.id}}" data-action-target="{{creator.id}}" id="{{creator.id}}">
                             <div class="table-cell check-box">
                                 <input type="checkbox" class="checkbox-row">
                             </div>
@@ -52,14 +52,14 @@
                                         </a>
                                     </li>
                                     <li class="tags">
-                                        <a href="/configs?creator={{creator_details.identifier}}&tab=images"
+                                        <a href="/configs?creator={{creator.id}}&tab=images"
                                             class="bg-primary light">
                                             <i class="fas fa-image"></i>
                                             images
                                         </a>
                                     </li>
                                     <li class="tags">
-                                        <a href="/configs?creator={{creator_details.identifier}}&tab=captions"
+                                        <a href="/configs?creator={{creator.id}}&tab=captions"
                                             class="bg-primary light">
                                             <i class="fas fa-tasks"></i>
                                             captions

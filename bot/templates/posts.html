@@ -4,17 +4,17 @@
 {% endblock %}
 {%block main_content%}
     <style>
-        .day-holder{
+        .post-holder{
             border: 1px solid var(--success);
             border-radius: 5px;
             width: 85%;
             margin: auto;
             padding: 10px 20px;
         }
-        .day-holder:not(:first-child){
+        .post-holder:not(:first-child){
             margin-top: 10px;
         }
-        .day-holder > .input-container{
+        .post-holder > .input-container{
             width: 100%;
         }
         .input-container > input:not(:last-child):focus,
@@ -30,7 +30,7 @@
             background: var(--secondary);
         }
 
-        .day-holder .day-label{
+        .post-holder .post-label{
             padding: 2.5px 5px;
             background: var(--success);
             width: fit-content;
@@ -44,11 +44,14 @@
             border: none;
             justify-content: end;
         }
-        .input-container.more > .add-day{
+        .input-container.more > .add-post{
             border: 1px solid var(--success);
             border-radius: 5px;
             width: fit-content;
             padding: 2.5px 5px;
+        }
+        .input-container.max-workers{
+            width: 85% !important;
         }
         .input-container.date-picker-container{
             width: fit-content;
@@ -62,78 +65,76 @@
                     data-action-url="/posts/add-post" data-action-message="Creating post..." 
                     data-next-action-url="/tasks">
                     <h3 class="form-header">
-                        Fill the form to start operation for all added creators, add more days if needed.
+                        Fill the form to start operation for all added creators, add more posts if needed.
                     </h3>
-                    <div class="input-container">
-                        <input type="number" id="max-workers" name="max-workers" value="50" autofocus tocomplete="delay" required>
+                    <div class="input-container max-workers">
+                        <input type="number" id="max-workers" name="max-workers" value="10" max="50" autofocus tocomplete="delay" required>
                         <label for="max-workers">Number of concurrent actions</label>
                     </div>
-                    <div class="day-holder">
-                        <div class="input-container day">
-                            <input type="number" id="day-1-image-count" name="day-1-image-count" autofocus tocomplete="delay" required>
-                            <label for="day-1-image-count">Number of images</label>
-                        </div>
-                        <div class="input-container">
-                            <input type="number" id="day-1-paid-count" name="day-1-paid-count" value="0" tocomplete="delay" required>
-                            <label for="day-1-paid-count">Number of paid images</label>
+                    <div class="post-holder">
+                        <div class="input-container post">
+                            <input type="number" id="post-1-image-count" name="post-1-image-count" autofocus tocomplete="delay" required>
+                            <label for="post-1-image-count">Number of images</label>
                         </div>
                         <!-- <div class="input-container" style="display:none">
-                            <select name="day-1-paid-caption" id="day-1-paid-caption">
+                            <select name="post-1-paid-caption" id="post-1-paid-caption">
                                 <option value="">Choose a caption for paid images</option>
                                 {% for caption in captions%}
                                     <option value="{{caption}}">{{caption}}</option>
                                 {%endfor%}
                             </select>
                         </div> -->
+                        <div class="input-container flex">
+                            <div class="radio-box">
+                                <input type="radio" class="post-cost" id="post-1-cost-free" name="post-1-cost-type" value="free" checked>
+                                <label for="post-1-cost-free">Free</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="post-cost" id="post-1-cost-paid" name="post-1-cost-type" value="paid">
+                                <label for="post-1-cost-paid">Paid</label>
+                            </div>
+                        </div>
                         <div class="input-container" style="display:none">
-                            <input type="number" id="day-1-price" name="day-1-price" value="0" tocomplete="delay" required>
-                            <label for="day-1-price">Price of paid images</label>
+                            <input type="number" id="post-1-price" name="post-1-price" value="0" tocomplete="delay" required>
+                            <label for="post-1-price">Price of paid images</label>
                         </div>
                         <div class="input-container flex">
                             <div class="radio-box">
-                                <input type="radio" class="captions" id="day-1-caption-creator" name="day-1-caption-source" value="creator">
-                                <label for="day-1-caption-creator">Use creator's caption</label>
+                                <input type="radio" class="captions" id="post-1-caption-creator" name="post-1-caption-source" value="creator">
+                                <label for="post-1-caption-creator">Use creator's caption</label>
                             </div>
                             <div class="radio-box">
-                                <input type="radio" class="captions" id="day-1-caption-universal" name="day-1-caption-source" value="universal" checked>
-                                <label for="day-1-caption-universal">Use universal caption</label>
+                                <input type="radio" class="captions" id="post-1-caption-universal" name="post-1-caption-source" value="universal" checked>
+                                <label for="post-1-caption-universal">Use universal caption</label>
                             </div>
                         </div>
                         <div class="input-container">
-                            <select name="day-1-caption" id="day-1-caption" required>
+                            <select name="post-1-caption" id="post-1-caption" required>
                                 <option value="">Choose a caption</option>
                                 {% for caption in captions%}
                                     <option value="{{caption}}">{{caption}}</option>
                                 {%endfor%}
                             </select>
                         </div>
-                        <div class="input-container">
-                            <select name="day-1-paid-caption" id="day-1-paid-caption">
-                                <option value="">Choose a caption for paid posts</option>
-                                {% for caption in captions%}
-                                    <option value="{{caption}}">{{caption}}</option>
-                                {%endfor%}
-                            </select>
-                        </div>
                         <div class="input-container flex">
                             <div class="radio-box">
-                                <input type="radio" id="day-1-schedule" name="day-1-run-type" value="schedule">
-                                <label for="day-1-schedule">Schedule post</label>
+                                <input type="radio" id="post-1-schedule" name="post-1-run-type" value="schedule">
+                                <label for="post-1-schedule">Schedule post</label>
                             </div>
                             <div class="radio-box">
-                                <input type="radio" id="day-1-run-now" name="day-1-run-type" value="run-now" checked>
-                                <label for="day-1-run-now">Post now</label>
+                                <input type="radio" id="post-1-run-now" name="post-1-run-type" value="run-now" checked>
+                                <label for="post-1-run-now">Post now</label>
                             </div>
                         </div>
                         <div class="input-container date-picker-container" style="display: none;">
-                            <input type="datetime-local" id="day-1-schedule-date" name="day-1-schedule-date">
-                            <label for="day-1-schedule-date">Picker a date and time</label>
+                            <input type="datetime-local" id="post-1-schedule-date" name="post-1-schedule-date">
+                            <label for="post-1-schedule-date">Picker a date and time</label>
                         </div>
-                        <div class="day-label">Day 1</div>
+                        <div class="post-label">post 1</div>
                     </div>
                     <div class="input-container more flex">
-                        <div class="add-day" id="add-day">
-                            <span><i class="fas fa-plus"></i></span> more day
+                        <div class="add-post" id="add-post">
+                            <span><i class="fas fa-plus"></i></span> more post
                         </div>
                     </div>
                     <div class="input-container flex">
@@ -144,28 +145,28 @@
         </section>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Counter to keep track of the day number
-                let dayCounter = 1;
+                // Counter to keep track of the post number
+                let postCounter = 1;
         
-                // Function to update day numbering
-                function updateDayNumbering() {
-                    const dayLabels = document.querySelectorAll('.day-label');
-                    dayLabels.forEach((dayLabel, index) => {
-                        const newDayNumber = index + 1;
-                        dayLabel.textContent = `Day ${newDayNumber}`;
+                // Function to update post numbering
+                function updatepostNumbering() {
+                    const postLabels = document.querySelectorAll('.post-label');
+                    postLabels.forEach((postLabel, index) => {
+                        const newpostNumber = index + 1;
+                        postLabel.textContent = `post ${newpostNumber}`;
                     });
                 }
 
-                function updatePaidElements(dayHolder, dayNumber) {
-                    // const paidCaptionSelect = dayHolder.querySelector('[name^="day-"][id$="-paid-caption"]');
-                    // const freeCaptionSelect = dayHolder.querySelector('[name^="day-"][id$="-free-caption"]');
+                function updatePaidElements(postHolder, postNumber) {
+                    const paidCaptionSelect = postHolder.querySelector('[name^="post-"][id$="-paid-caption"]');
+                    const freeCaptionSelect = postHolder.querySelector('[name^="post-"][id$="-free-caption"]');
                     
-                    // const paidCaptionSelectHolder = paidCaptionSelect.parentNode;
-                    // const freeCaptionSelectHolder = freeCaptionSelect.parentNode;
+                    const paidCaptionSelectHolder = paidCaptionSelect.parentNode;
+                    const freeCaptionSelectHolder = freeCaptionSelect.parentNode;
 
-                    const paidCountInput = dayHolder.querySelector('[name^="day-"][id$="-paid-count"]');
-                    const freeCountInput = dayHolder.querySelector('[name^="day-"][id$="-image-count"]');
-                    const priceInput = dayHolder.querySelector('[name^="day-"][id$="-price"]');
+                    const paidCountInput = postHolder.querySelector('[name^="post-"][id$="-paid-count"]');
+                    const freeCountInput = postHolder.querySelector('[name^="post-"][id$="-image-count"]');
+                    const priceInput = postHolder.querySelector('[name^="post-"][id$="-price"]');
                     const priceInputHolder = priceInput.parentNode;
                     
                     const initUpdate = () =>{
@@ -174,24 +175,24 @@
                         
     
                         if (paidCount > 0 && paidCount <= freeCount) {
-                            // paidCaptionSelect.setAttribute('required', 'required');
-                            // paidCaptionSelectHolder.style.display = '';
+                            paidCaptionSelect.setAttribute('required', 'required');
+                            paidCaptionSelectHolder.style.display = '';
 
                             priceInput.setAttribute('required', 'required');
                             priceInput.value = '15';
                             priceInputHolder.style.display = '';
 
 
-                            // if(paidCount === freeCount){
-                            //     freeCaptionSelect.removeAttribute('required');
-                            //     freeCaptionSelectHolder.style.display = 'none';
-                            // }
+                            if(paidCount === freeCount){
+                                freeCaptionSelect.removeAttribute('required');
+                                freeCaptionSelectHolder.style.display = 'none';
+                            }
                         }
                         else{
-                            // paidCaptionSelect.removeAttribute('required');
-                            // freeCaptionSelect.setAttribute('required','required');
-                            // freeCaptionSelectHolder.style.display = '';
-                            // paidCaptionSelectHolder.style.display = 'none';
+                            paidCaptionSelect.removeAttribute('required');
+                            freeCaptionSelect.setAttribute('required','required');
+                            freeCaptionSelectHolder.style.display = '';
+                            paidCaptionSelectHolder.style.display = 'none';
 
                             priceInput.removeAttribute('required');
                             priceInputHolder.style.display = 'none';
@@ -207,56 +208,53 @@
                     });
                 }
 
-                function updateRadioButtons(newDayHolder, dayNumber) {
+                function updateRadioButtons(newpostHolder, postNumber) {
                     // Find radio buttons and update their names, IDs, and event listeners
-                    const radios = newDayHolder.querySelectorAll('input[type="radio"]');
+                    const radios = newpostHolder.querySelectorAll('input[type="radio"]');
                     radios.forEach(radio => {
                         const oldName = radio.getAttribute('name');
-                        const newName = oldName.replace(/\d+/, dayNumber);
+                        const newName = oldName.replace(/\d+/, postNumber);
                         radio.setAttribute('name', newName);
                     
                         // Update label 'for' attribute
                         const label = radio.nextElementSibling;
                         if (label && label.tagName === 'LABEL') {
                             const oldLable = label.getAttribute('for');
-                            const newLabel = `${oldLable.replace(/\d+/, dayCounter)}`;
+                            const newLabel = `${oldLable.replace(/\d+/, postCounter)}`;
                             label.setAttribute('for', newLabel);
                             radio.setAttribute('id',newLabel);
                         }
                     });
 
                     // Add event listeners to toggle the date picker based on the selected option
-                    const datePicker = newDayHolder.querySelector('.date-picker-container');
+                    const datePicker = newpostHolder.querySelector('.date-picker-container');
                     radios.forEach(radio => {
                         radio.addEventListener('change', function () {
                             if (radio.classList.contains('captions')){
-                                const captionSelect = newDayHolder.querySelector('[name^="day-"][id$="caption"]');
+                                const captionSelect = newpostHolder.querySelector('[name^="post-"][id$="caption"]');
                                 const captionSelectHolder = captionSelect.parentNode;
-
-                                const captionPaidSelect = newDayHolder.querySelector('[name^="day-"][id$="paid-caption"]');
-                                const captionPaidSelectHolder = captionPaidSelect.parentNode;
-                                
-                                const paidCountInput = newDayHolder.querySelector('[name^="day-"][id$="-paid-count"]');
-                                const freeCountInput = newDayHolder.querySelector('[name^="day-"][id$="-image-count"]');
-                                
-                                const paidCount = parseInt(paidCountInput.value, 10);
-                                const freeCount = parseInt(freeCountInput.value,10);
                                 
                                 if (this.value == 'creator'){
                                     captionSelect.removeAttribute('required');
                                     captionSelectHolder.style.display = 'none';
-
-                                    captionPaidSelect.removeAttribute('required');
-                                    captionPaidSelectHolder.style.display = 'none';
                                 }else{
                                     captionSelect.setAttribute('required','required');
                                     captionSelectHolder.style.display = '';
-                                    
-                                    if (paidCount > 0 && paidCount <= freeCount){
-                                        captionPaidSelect.setAttribute('required','required');
-                                    }
-                                    captionPaidSelectHolder.style.display = '';
                                 }
+                            }else if(radio.classList.contains('post-cost')){
+                                const priceInput = newpostHolder.querySelector('[name^="post-"][id$="-price"]');
+                                const priceInputHolder = priceInput.parentNode;
+
+                                if (this.value == 'paid'){
+                                    priceInput.setAttribute('required', 'required');
+                                    priceInput.value = '15';
+                                    priceInputHolder.style.display = '';
+                                }else{
+                                    priceInput.removeAttribute('required');
+                                    priceInput.value = '0';
+                                    priceInputHolder.style.display = 'None';
+                                }
+
                             }else{
                                 if (this.value === 'schedule') {
                                     datePicker.style.display = ''; // Show date picker
@@ -268,61 +266,61 @@
                     });
                 }
                 
-                if (dayCounter === 1){
-                    const originalDayHolder = document.querySelector('.day-holder');
-                    updatePaidElements(originalDayHolder,dayCounter);
-                    updateRadioButtons(originalDayHolder, dayCounter);
+                if (postCounter === 1){
+                    const originalpostHolder = document.querySelector('.post-holder');
+                    // updatePaidElements(originalpostHolder,postCounter);
+                    updateRadioButtons(originalpostHolder, postCounter);
                 }
 
-                // Function to add a new day holder
-                function addDayHolder() {
-                    dayCounter++;
+                // Function to add a new post holder
+                function addpostHolder() {
+                    postCounter++;
         
-                    // Clone the original day holder
-                    const originalDayHolder = document.querySelector('.day-holder');
-                    const newDayHolder = originalDayHolder.cloneNode(true);
+                    // Clone the original post holder
+                    const originalpostHolder = document.querySelector('.post-holder');
+                    const newpostHolder = originalpostHolder.cloneNode(true);
         
                     // Update the IDs and names of input fields
-                    newDayHolder.querySelectorAll('input, select').forEach(input => {
+                    newpostHolder.querySelectorAll('input, select').forEach(input => {
                         const oldName = input.getAttribute('name');
-                        const newName = `${oldName.replace(/\d+/, dayCounter)}`;
+                        const newName = `${oldName.replace(/\d+/, postCounter)}`;
                         input.setAttribute('name', newName);
                         input.setAttribute('id',newName);
 
                         const label = input.nextElementSibling;
                         if (label && label.tagName === 'LABEL') {
                             const oldLable = label.getAttribute('for');
-                            const newLabel = `${oldLable.replace(/\d+/, dayCounter)}`;
+                            const newLabel = `${oldLable.replace(/\d+/, postCounter)}`;
                             label.setAttribute('for', newLabel);
                             input.setAttribute('id',newLabel);
                         }
                     });
-                    updatePaidElements(newDayHolder, dayCounter);
-                    updateRadioButtons(newDayHolder, dayCounter);
+                    // updatePaidElements(newpostHolder, postCounter);
+                    updateRadioButtons(newpostHolder, postCounter);
         
-                    // Add a "Remove Day" button
-                    const removeDayButton = document.createElement('div');
-                    removeDayButton.classList.add('remove-day');
-                    removeDayButton.innerHTML = '<span><i class="fas fa-minus"></i></span> remove day';
-                    removeDayButton.addEventListener('click', function () {
-                        newDayHolder.remove();
-                        dayCounter--;
-                        updateDayNumbering();
+                    // Add a "Remove post" button
+                    const removepostButton = document.createElement('div');
+                    removepostButton.classList.add('remove-post');
+                    removepostButton.innerHTML = '<span><i class="fas fa-minus"></i></span> remove post';
+                    removepostButton.addEventListener('click', function () {
+                        newpostHolder.remove();
+                        postCounter--;
+                        updatepostNumbering();
                     });
         
-                    // Append the "Remove Day" button to the new day holder
-                    newDayHolder.appendChild(removeDayButton);
+                    // Append the "Remove post" button to the new post holder
+                    newpostHolder.appendChild(removepostButton);
         
-                    // Insert the new day holder inside the form
+                    // Insert the new post holder inside the form
                     const form = document.querySelector('#posts-form');
-                    form.insertBefore(newDayHolder, form.querySelector('.input-container.more'));
+                    form.insertBefore(newpostHolder, form.querySelector('.input-container.more'));
         
-                    // Update day numbering
-                    updateDayNumbering();
+                    // Update post numbering
+                    updatepostNumbering();
                 }
         
-                // Event listener for the "Add Day" button
-                document.querySelector('#add-day').addEventListener('click', addDayHolder);
+                // Event listener for the "Add post" button
+                document.querySelector('#add-post').addEventListener('click', addpostHolder);
             });
         </script>
     {%elif action == 'edit-post'%}
@@ -334,7 +332,7 @@
                     <h3 class="form-header">
                         Fill the form to edit the schedule details.
                     </h3>
-                    <div class="day-holder">
+                    <div class="post-holder">
                         <div class="input-container">
                             <select name="caption" id="caption">
                                 <option value="">Choose a caption</option>

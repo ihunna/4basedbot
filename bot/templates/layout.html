@@ -283,8 +283,8 @@
                 }
 
                 if (['add-post', 'edit-post'].includes(page)) {
-                    const days = form.querySelectorAll('.day-holder');
-                    jsonData.total_days = days.length;
+                    const posts = form.querySelectorAll('.post-holder');
+                    jsonData.total_posts = posts.length;
                 }
 
                 const response = await fetch(`${url}`, {

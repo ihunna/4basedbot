@@ -120,6 +120,7 @@ class Utils:
 			cursor.execute('''
 				CREATE TABLE IF NOT EXISTS creators (
 					id TEXT PRIMARY KEY,
+				  	email TEXT,
 					data TEXT,
 				  	admin TEXT,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
@@ -161,7 +162,7 @@ class Utils:
 	
 	@staticmethod
 	def add_admin(admin_id,admin_data):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -186,7 +187,7 @@ class Utils:
 
 	@staticmethod
 	def delete_admin(admin_id):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -204,7 +205,7 @@ class Utils:
 
 	@staticmethod
 	def update_admin(admin_id, admin_data):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -279,12 +280,12 @@ class Utils:
 
 
 	@staticmethod
-	def add_creator(creator_id,creator_data,admin):
-		success,msg = True,''
+	def add_creator(creator_id,creator_email,creator_data,admin):
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			cursor.execute("INSERT INTO creators (id, data, admin) VALUES (?, ?, ?)", (creator_id,json.dumps(creator_data),admin))
+			cursor.execute("INSERT INTO creators (id, email, data, admin) VALUES (?, ?, ?, ?)", (creator_id,creator_email,json.dumps(creator_data),admin))
 			conn.commit()
 			
 			success,msg = True, 'Creator added successfully'
@@ -296,7 +297,7 @@ class Utils:
 
 	@staticmethod
 	def delete_creator(creator_id):
-		success,msg = True,''
+		success,msg = False	,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -313,13 +314,13 @@ class Utils:
 			return success,msg
 
 	@staticmethod
-	def update_creator(creator_id,creator_data):
-		success,msg = True,''
+	def update_creator(creator_id,creator_email,creator_data):
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
 			
-			cursor.execute("UPDATE creators SET data = ? WHERE id = ?", (json.dumps(creator_data),creator_id))
+			cursor.execute("UPDATE creators SET email = ?, data = ? WHERE id = ?", (creator_email,json.dumps(creator_data),creator_id))
 			conn.commit()
 			
 			success,msg = True, 'Creator updated successfully'
@@ -331,7 +332,7 @@ class Utils:
 		
 	@staticmethod
 	def get_creators(admin='',limit=20, offset=0,multiple=True,creator=None):
-		success, creators, total_creators = True, [], 0
+		success, creators, total_creators = False, [], 0
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -345,28 +346,55 @@ class Utils:
 
 				creators = [{
 					'id': row[0], 
-					'data': json.loads(row[1]),
-					'created_at': row[3]
+					'email':row[1],
+					'data': json.loads(row[2]),
+					'created_at': row[4]
 					} for row in rows]
 			else:
 				cursor.execute("SELECT * FROM creators WHERE id = ?", (creator,))
 				row = cursor.fetchone()
+				
 				creators = {
 					'id': row[0], 
-					'data': json.loads(row[1]),
-					'created_at': row[2]
+					'email':row[1],
+					'data': json.loads(row[2]),
+					'created_at': row[4]
 				} if row is not None else {}
-
+				
+			success = True
 		except Exception as error:
 			success, creators = False, f'Error getting creators:{error}'
 
 		finally:
 			conn.close()
 			return success, creators, total_creators
+		
+	@staticmethod
+	def check_creator(creator_email,admin):
+		success, creator = False,{}
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+			cursor.execute("SELECT * FROM creators WHERE email = ? AND admin = ?", (creator_email,admin))
+			row = cursor.fetchone()
+			creator = {
+				'id': row[0], 
+				'email':row[1],
+				'data': json.loads(row[2]),
+				'created_at': row[4]
+			} if row is not None else {}
+			success = True
+
+		except Exception as error:
+			success, creator = False, f'Error getting creators:{error}'
+
+		finally:
+			conn.close()
+			return success, creator
 
 	@staticmethod
 	def add_task(task_id, task):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -391,7 +419,7 @@ class Utils:
 
 	@staticmethod
 	def delete_task(task_id):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -409,7 +437,7 @@ class Utils:
 
 	@staticmethod
 	def update_task(task_id, task):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -427,7 +455,7 @@ class Utils:
 
 	@staticmethod
 	def check_task_status(task_id):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -488,7 +516,7 @@ class Utils:
 
 	@staticmethod
 	def add_post(admin,post):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -528,7 +556,7 @@ class Utils:
 
 	@staticmethod
 	def delete_post(post_id):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
@@ -546,7 +574,7 @@ class Utils:
 
 	@staticmethod
 	def update_post(post_id, post):
-		success,msg = True,''
+		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
