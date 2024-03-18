@@ -53,6 +53,7 @@ socketio = SocketIO(app)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config['SERVER_KEY'] = server_key
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
 
 app.config["SESSION_TYPE"] = "filesystem"
