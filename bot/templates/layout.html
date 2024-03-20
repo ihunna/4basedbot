@@ -159,48 +159,54 @@
     {%if g.page == 'configs'%}
         <script>
             try{
-                const imagesForm = document.querySelector('#images-form');
-                const imageInput = imagesForm.querySelector('#image-upload');
-                const label = imagesForm.querySelector('label')
-                const nextActionUrl = imagesForm.getAttribute('data-action-next-url');
-                const actionUrl = imagesForm.getAttribute('data-action-url');
-                imageInput.addEventListener('change', async () => {
-                    const action = 'Image upload';
-                    toogleLoader('show', `Uploading images  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
-                    // Create a FormData object and append the selected files
-                    const formData = new FormData();
-                    const files = imageInput.files;
-                    for (let i = 0; i < files.length; i++) {
-                        formData.append(`file${i}`, files[i]);
-                    }
+                const imageForms = document.querySelectorAll('[id*="images-form"]');
 
-                    // Perform the image upload
-                    const response = await fetch(actionUrl, {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    if (response.ok) {
-                        toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
-                        setTimeout(() => {
-                            toogleLoader('no-show');
-                            setTimeout(() => {
-                                window.location.href = nextActionUrl;
-                            }, 700);
-                        }, 3000);
-                    } else {
-                        if (response.status !== 500) {
-                            const responseData = await response.json();
-                            console.error(`${action} failed:`, responseData.msg);
-                            toogleLoader('show', `${responseData.msg}`, 'error');
-                            setTimeout(() => toogleLoader('no-show'), 3000);
-                        } else {
-                            toogleLoader('show', `${action} failed`, 'error');
-                            console.error(`${action} failed:`, response.statusText);
-                            setTimeout(() => toogleLoader('no-show'), 3000);
+                imageForms.forEach(e=>{
+                    const actionCategory = e.getAttribute('data-action-category');
+                    const imageInput = e.querySelector(`#image-upload-${actionCategory}`);
+                    const label = e.querySelector('label')
+                    const nextActionUrl = e.getAttribute('data-action-next-url');
+                    const actionUrl = e.getAttribute('data-action-url');
+                    console.log(actionUrl)
+                    
+                    imageInput.addEventListener('change', async () => {
+                        const action = 'Image upload';
+                        toogleLoader('show', `Uploading images  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+                        // Create a FormData object and append the selected files
+                        const formData = new FormData();
+                        const files = imageInput.files;
+                        for (let i = 0; i < files.length; i++) {
+                            formData.append(`file${i}`, files[i]);
                         }
-                    }
-                });
+
+                        // Perform the image upload
+                        const response = await fetch(actionUrl, {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        if (response.ok) {
+                            toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
+                            setTimeout(() => {
+                                toogleLoader('no-show');
+                                setTimeout(() => {
+                                    window.location.href = nextActionUrl;
+                                }, 700);
+                            }, 3000);
+                        } else {
+                            if (response.status !== 500) {
+                                const responseData = await response.json();
+                                console.error(`${action} failed:`, responseData.msg);
+                                toogleLoader('show', `${responseData.msg}`, 'error');
+                                setTimeout(() => toogleLoader('no-show'), 3000);
+                            } else {
+                                toogleLoader('show', `${action} failed`, 'error');
+                                console.error(`${action} failed:`, response.statusText);
+                                setTimeout(() => toogleLoader('no-show'), 3000);
+                            }
+                        }
+                    });
+                })
             }catch (error) {
                 console.error('Error occurred:', error);
             }

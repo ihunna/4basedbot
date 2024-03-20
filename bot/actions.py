@@ -155,7 +155,7 @@ class Creator:
 				proxies=proxies
 			)
 
-			if not response.ok:success,msg = False, response.text
+			if not response.ok: raise Exception(response.text)
 			transfer_id = response.json()['_id']
 
 			headers = {
@@ -233,6 +233,7 @@ class Creator:
 			return success,msg
 		
 		except Exception as error:
+			Utils.write_log(error)
 			return False,f'Error uploading post data {error}, {username}, task {task_id}'
 		
 	def update(self,user:dict,data:dict):
@@ -384,13 +385,10 @@ class _4BASED:
 
 			images_folder = os.path.join(configs_folder,creator['id'],'images')
 			total_images = sum([post['image_count'] for post in post_data])
+			total_sfw_images = sum([post['image_count'] for post in post_data  if post['image_source']  == 'sfw'])
+			total_nsfw_images = sum([post['image_count'] for post in post_data  if post['image_source']  == 'nsfw'])
 
-			success,images = Utils.get_images(images_folder,all=False,image_count=total_images)
-			if not success:raise Exception(images)
-
-			if len(images) < total_images:raise Exception(f'Not enough images to match {total_images} on {creator_name}')
-
-			success,post_data = Utils.share_images(post_data,images)
+			success,post_data = Utils.share_images(post_data,images_folder,total_images,total_sfw_images,total_nsfw_images)
 			if not success:raise Exception(post_data)
 
 			captions_file = os.path.join(configs_folder,creator['id'],'captions.txt')

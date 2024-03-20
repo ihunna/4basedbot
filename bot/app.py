@@ -395,6 +395,7 @@ def handle_posts(action):
 		if action == 'add-post':
 			for post in range(1, total_posts + 1):
 				post_data = {
+					f'image_source':data[f'post-{post}-image-source'],
 					f'image_count': int(data[f'post-{post}-image-count']),
 					# f'paid_count': int(data[f'post-{post}-paid-count']),
 					f'price': data[f'post-{post}-price'],
@@ -582,11 +583,12 @@ def configs():
 		images_folder = os.path.join(configs_folder,creator,'images')
 		
 		if tab == 'images' and creator != 'universal':
+			category = request.args.get('category',None)
 			items_per_page = 20
 			page = int(request.args.get('page', 1))
 
 			images = []
-			success,msg = Utils.get_images(images_folder)
+			success,msg = Utils.get_images(images_folder,tag=category)
 			
 			if not success:Utils.write_log(msg)
 			
@@ -603,9 +605,12 @@ def configs():
 					'configs.html',creator=creator,
 					tab=tab,images=images,
 					total_pages=total_pages,
-					page=page)
+					page=page,category=category)
 			
 			return render_template('configs.html',creator=creator,images=images)
+		
+		elif tab == 'upload-images':
+			return render_template('configs.html',creator=creator,tab=tab)
 		
 		elif tab == 'captions' and creator != 'universal':
 			captions_file = os.path.join(configs_folder,creator,'captions.txt')
@@ -634,14 +639,12 @@ def serve_image(creator,folder,filename):
 	if not os.path.isfile(image_path):abort(404)
 	return send_from_directory(image_folder,filename)
 
-@app.route('/config/<tab>/<action>/<creator>', methods=['POST'])
+@app.route('/images/<action>/<creator>/<category>',methods=['POST'])
 @login_required
-def config(tab, action,creator):
+def images(action,creator,category):
 	try:
-		captions_file = os.path.join(configs_folder, creator, 'captions.txt')
-		images_folder = os.path.join(configs_folder, creator, 'images')
-
-		if tab == 'images' and action == 'upload':
+		if action == 'upload':
+			images_folder = os.path.join(configs_folder, creator, 'images')
 			os.makedirs(images_folder, exist_ok=True)
 
 			saved = 0
@@ -652,14 +655,24 @@ def config(tab, action,creator):
 				if file.filename == '':
 					return jsonify({'msg': 'No selected file'}), 400
 
-				file_path = os.path.join(images_folder, file.filename)
+				file_path = os.path.join(images_folder, f'{category}-{file.filename}')
 				file.save(file_path)
 
 				saved+=1
 			if saved >= 1:return jsonify({'msg': 'Images uploaded successfully'}), 200
 			else:return jsonify({'msg': f'{saved} images saved'}), 400
 
-		elif tab == 'captions' and action == 'update':
+		else:return jsonify({'msg':'No action specified'}),400
+	except Exception as error:
+		Utils.write_log(error)
+		abort(500)
+
+@app.route('/config/<tab>/<action>/<creator>', methods=['POST'])
+@login_required
+def config(tab, action,creator):
+	try:
+		captions_file = os.path.join(configs_folder, creator, 'captions.txt')
+		if tab == 'captions' and action == 'update':
 			captions = request.form.get('configs','')
 			captions = captions.replace('\n','')
 

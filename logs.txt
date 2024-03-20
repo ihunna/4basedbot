@@ -3242,3 +3242,186 @@ t +++
 [2024-03-16 18:07:47] [LOG] Task successflly created
 [2024-03-16 18:07:47] [LOG] === Post creation started for 56C0CDD1 ===
 [2024-03-16 18:07:50] [LOG] +++ creating post +++
+[2024-03-18 23:57:04] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\48C2A5C8\images does not exists
+[2024-03-18 23:57:08] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\48C2A5C8\images does not exists
+[2024-03-18 23:57:54] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\48C2A5C8\images does not exists
+[2024-03-19 20:19:49] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\48C2A5C8\images does not exists
+[2024-03-19 20:23:15] [LOG] C:\Users\ihunn\Desktop\automations\4based\bot\settings\48C2A5C8
+[2024-03-19 20:24:12] [LOG] === Add creators started for 797608f0 ===
+[2024-03-19 20:24:15] [LOG] client updated
+[2024-03-19 20:24:15] [LOG] Task successflly created
+[2024-03-19 21:45:37] [LOG] 'page' is undefined
+[2024-03-19 21:48:09] [LOG] unexpected char "'" at 8967
+[2024-03-19 22:11:55] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\BE1285AA/sfw\images does not exists
+[2024-03-19 22:48:54] [LOG] [WinError 3] The system cannot find the path specified: 'C:\\Users\\ihunn\\Desktop\\automations\\4based\\bot\\settings\\BE1285AA\\images\\nsfw'
+[2024-03-19 22:49:00] [LOG] [WinError 3] The system cannot find the path specified: 'C:\\Users\\ihunn\\Desktop\\automations\\4based\\bot\\settings\\BE1285AA\\images\\nsfw'
+[2024-03-19 22:49:03] [LOG] [WinError 3] The system cannot find the path specified: 'C:\\Users\\ihunn\\Desktop\\automations\\4based\\bot\\settings\\BE1285AA\\images\\nsfw'
+[2024-03-19 22:49:09] [LOG] [WinError 3] The system cannot find the path specified: 'C:\\Users\\ihunn\\Desktop\\automations\\4based\\bot\\settings\\BE1285AA\\images\\nsfw'
+[2024-03-19 22:50:48] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\BE1285AA\images does not exists
+[2024-03-19 22:53:13] [LOG] Folder C:\Users\ihunn\Desktop\automations\4based\bot\settings\BE1285AA\images does not exists
+[2024-03-19 23:53:48] [LOG] === Logging in creators ===
+[2024-03-19 23:53:49] [LOG] client updated
+[2024-03-19 23:53:49] [LOG] Task successflly created
+[2024-03-19 23:53:49] [LOG] === Post creation started for 2DA67378 ===
+[2024-03-19 23:53:51] [LOG] list indices must be integers or slices, not str
+[2024-03-20 06:17:00] [LOG] === Logging in creators ===
+[2024-03-20 06:17:00] [LOG] client updated
+[2024-03-20 06:17:00] [LOG] Task successflly created
+[2024-03-20 06:17:00] [LOG] === Post creation started for C02FA676 ===
+[2024-03-20 06:17:03] [LOG] Error sharing images string indices must be integers
+[2024-03-20 06:19:03] [LOG] === Logging in creators ===
+[2024-03-20 06:19:03] [LOG] client updated
+[2024-03-20 06:19:03] [LOG] Task successflly created
+[2024-03-20 06:19:03] [LOG] === Post creation started for 742333AA ===
+[2024-03-20 06:19:06] [LOG] +++ creating post +++
+[2024-03-20 06:20:15] [LOG] === Logging in creators ===
+[2024-03-20 06:20:16] [LOG] === Post creation started for 8871F21A ===
+[2024-03-20 06:20:16] [LOG] client updated
+[2024-03-20 06:20:16] [LOG] Task successflly created
+[2024-03-20 06:20:18] [LOG] +++ creating post +++
+[2024-03-20 06:20:20] [LOG] [Errno 2] No such file or directory: 'nsfw-IMG_5952.JPG'
+[2024-03-20 06:21:34] [LOG] === Logging in creators ===
+[2024-03-20 06:21:34] [LOG] client updated
+[2024-03-20 06:21:34] [LOG] Task successflly created
+[2024-03-20 06:21:34] [LOG] === Post creation started for 4EECFDC8 ===
+[2024-03-20 06:21:37] [LOG] +++ creating post +++
+[2024-03-20 06:21:39] [LOG] [Errno 2] No such file or directory: 'sfw-photo_2024-02-09_12-24-27.jpg'
+[2024-03-20 06:27:41] [LOG] === Logging in creators ===
+[2024-03-20 06:27:42] [LOG] client updated
+[2024-03-20 06:27:42] [LOG] Task successflly created
+[2024-03-20 06:27:42] [LOG] === Post creation started for DA0B2075 ===
+[2024-03-20 06:27:45] [LOG] +++ creating post +++
+[2024-03-20 06:27:48] [LOG] [Errno 2] No such file or directory: 'nsfw-IMG_5952.JPG'
+[2024-03-20 06:28:31] [LOG] === Logging in creators ===
+[2024-03-20 06:28:32] [LOG] client updated
+[2024-03-20 06:28:32] [LOG] Task successflly created
+[2024-03-20 06:28:32] [LOG] === Post creation started for C77DC2EE ===
+[2024-03-20 06:28:36] [LOG] Error sharing images 
+[2024-03-20 06:30:10] [LOG] === Logging in creators ===
+[2024-03-20 06:30:11] [LOG] client updated
+[2024-03-20 06:30:11] [LOG] Task successflly created
+[2024-03-20 06:30:11] [LOG] === Post creation started for 77EC1E1D ===
+[2024-03-20 06:30:13] [LOG] 
+[2024-03-20 06:30:13] [LOG] Error sharing images 
+[2024-03-20 06:30:57] [LOG] === Logging in creators ===
+[2024-03-20 06:30:58] [LOG] client updated
+[2024-03-20 06:30:58] [LOG] Task successflly created
+[2024-03-20 06:30:58] [LOG] === Post creation started for 351C58E5 ===
+[2024-03-20 06:31:00] [LOG] 
+[2024-03-20 06:31:00] [LOG] Error sharing images 
+[2024-03-20 06:31:33] [LOG] === Logging in creators ===
+[2024-03-20 06:31:33] [LOG] === Post creation started for FB02C049 ===
+[2024-03-20 06:31:33] [LOG] client updated
+[2024-03-20 06:31:33] [LOG] Task successflly created
+[2024-03-20 06:31:36] [LOG] Error sharing images 
+[2024-03-20 06:32:31] [LOG] === Logging in creators ===
+[2024-03-20 06:32:32] [LOG] === Post creation started for 725E90DC ===
+[2024-03-20 06:32:32] [LOG] client updated
+[2024-03-20 06:32:32] [LOG] Task successflly created
+[2024-03-20 06:32:34] [LOG] Error sharing images 
+[2024-03-20 06:33:23] [LOG] === Logging in creators ===
+[2024-03-20 06:33:24] [LOG] client updated
+[2024-03-20 06:33:24] [LOG] Task successflly created
+[2024-03-20 06:33:24] [LOG] === Post creation started for D487F027 ===
+[2024-03-20 06:33:27] [LOG] Error sharing images 
+[2024-03-20 06:34:12] [LOG] === Logging in creators ===
+[2024-03-20 06:34:13] [LOG] client updated
+[2024-03-20 06:34:13] [LOG] Task successflly created
+[2024-03-20 06:34:13] [LOG] === Post creation started for 8E38778C ===
+[2024-03-20 06:34:15] [LOG] Error sharing images 
+[2024-03-20 06:38:09] [LOG] === Logging in creators ===
+[2024-03-20 06:38:10] [LOG] client updated
+[2024-03-20 06:38:10] [LOG] === Post creation started for 775393A3 ===
+[2024-03-20 06:38:10] [LOG] Task successflly created
+[2024-03-20 06:38:12] [LOG] Error sharing images 
+[2024-03-20 06:44:34] [LOG] === Logging in creators ===
+[2024-03-20 06:44:35] [LOG] client updated
+[2024-03-20 06:44:35] [LOG] Task successflly created
+[2024-03-20 06:44:35] [LOG] === Post creation started for 0EBF0D92 ===
+[2024-03-20 06:44:37] [LOG] Error sharing images 
+[2024-03-20 06:48:56] [LOG] === Logging in creators ===
+[2024-03-20 06:48:56] [LOG] client updated
+[2024-03-20 06:48:56] [LOG] Task successflly created
+[2024-03-20 06:48:56] [LOG] === Post creation started for 2C11C451 ===
+[2024-03-20 06:49:00] [LOG] Error sharing images 
+[2024-03-20 06:49:32] [LOG] === Logging in creators ===
+[2024-03-20 06:49:33] [LOG] client updated
+[2024-03-20 06:49:33] [LOG] Task successflly created
+[2024-03-20 06:49:33] [LOG] === Post creation started for 6383473D ===
+[2024-03-20 06:49:35] [LOG] Error sharing images 
+[2024-03-20 06:55:03] [LOG] === Logging in creators ===
+[2024-03-20 06:55:05] [LOG] === Logging in creators ===
+[2024-03-20 06:55:11] [LOG] client updated
+[2024-03-20 06:55:11] [LOG] Task successflly created
+[2024-03-20 06:55:17] [LOG] === Post creation started for 169E155F ===
+[2024-03-20 06:55:24] [LOG] HTTPConnectionPool(host='4basedmanager.com', port=80): Max retries exceeded with url: //update-client (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x0000028C20936830>, 'Connection to 4basedmanager.com timed out. (connect timeout=None)'))
+[2024-03-20 06:55:24] [LOG] === Post creation started for 0D5980DD ===
+[2024-03-20 06:55:48] [LOG] Error logging in HTTPSConnectionPool(host='rest.4based.com', port=443): Max retries exceeded with url: /api/1.0/auth/login (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:997)'))) on weagetofi1977@gmail.com
+[2024-03-20 06:55:48] [LOG] Error logging in HTTPSConnectionPool(host='rest.4based.com', port=443): Max retries exceeded with url: /api/1.0/auth/login (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:997)'))) on weagetofi1977@gmail.com
+[2024-03-20 06:57:52] [LOG] HTTPConnectionPool(host='4basedmanager.com', port=80): Read timed out. (read timeout=None)
+[2024-03-20 07:00:50] [LOG] === Logging in creators ===
+[2024-03-20 07:00:50] [LOG] client updated
+[2024-03-20 07:00:50] [LOG] Task successflly created
+[2024-03-20 07:00:50] [LOG] === Post creation started for E50301B4 ===
+[2024-03-20 07:00:52] [LOG] Error sharing images 
+[2024-03-20 07:02:57] [LOG] === Logging in creators ===
+[2024-03-20 07:02:58] [LOG] client updated
+[2024-03-20 07:02:58] [LOG] Task successflly created
+[2024-03-20 07:02:58] [LOG] === Post creation started for A872FD64 ===
+[2024-03-20 07:03:00] [LOG] Error sharing images 
+[2024-03-20 07:03:56] [LOG] === Logging in creators ===
+[2024-03-20 07:03:57] [LOG] client updated
+[2024-03-20 07:03:57] [LOG] Task successflly created
+[2024-03-20 07:03:57] [LOG] === Post creation started for 9E1C52A8 ===
+[2024-03-20 07:03:59] [LOG] Error sharing images 
+[2024-03-20 07:10:37] [LOG] === Logging in creators ===
+[2024-03-20 07:10:37] [LOG] === Post creation started for C2153DC9 ===
+[2024-03-20 07:10:37] [LOG] client updated
+[2024-03-20 07:10:37] [LOG] Task successflly created
+[2024-03-20 07:10:39] [LOG] Error sharing images 
+[2024-03-20 07:12:49] [LOG] === Logging in creators ===
+[2024-03-20 07:12:50] [LOG] client updated
+[2024-03-20 07:12:50] [LOG] Task successflly created
+[2024-03-20 07:12:50] [LOG] === Post creation started for BFA7F9FF ===
+[2024-03-20 07:12:52] [LOG] +++ creating post +++
+[2024-03-20 07:13:02] [LOG] [Errno 2] No such file or directory: 'C:\\Users\\ihunn\\Desktop\\automations\\4based\\bot\\settings\\BE1285AA\\images\\nsfw-IMG_5952.JPG'
+[2024-03-20 07:14:15] [LOG] === Logging in creators ===
+[2024-03-20 07:14:16] [LOG] client updated
+[2024-03-20 07:14:16] [LOG] Task successflly created
+[2024-03-20 07:14:16] [LOG] === Post creation started for 71F7D71D ===
+[2024-03-20 07:14:19] [LOG] +++ creating post +++
+[2024-03-20 07:37:11] [LOG] === Logging in creators ===
+[2024-03-20 07:37:12] [LOG] client updated
+[2024-03-20 07:37:12] [LOG] Task successflly created
+[2024-03-20 07:37:12] [LOG] === Post creation started for 00FD6F12 ===
+[2024-03-20 07:37:14] [LOG] 'bool' object is not iterable
+[2024-03-20 07:41:05] [LOG] === Logging in creators ===
+[2024-03-20 07:41:06] [LOG] === Post creation started for 4D7D0BAF ===
+[2024-03-20 07:41:06] [LOG] client updated
+[2024-03-20 07:41:06] [LOG] Task successflly created
+[2024-03-20 07:41:08] [LOG] Error sharing images list indices must be integers or slices, not tuple
+[2024-03-20 07:41:51] [LOG] === Logging in creators ===
+[2024-03-20 07:41:52] [LOG] === Post creation started for 24787A2D ===
+[2024-03-20 07:41:52] [LOG] client updated
+[2024-03-20 07:41:52] [LOG] Task successflly created
+[2024-03-20 07:41:54] [LOG] Error sharing images Not enough nsfw
+[2024-03-20 07:42:46] [LOG] === Logging in creators ===
+[2024-03-20 07:42:46] [LOG] client updated
+[2024-03-20 07:42:46] [LOG] Task successflly created
+[2024-03-20 07:42:46] [LOG] === Post creation started for 4F713EA7 ===
+[2024-03-20 07:42:48] [LOG] Error sharing images, Not enough sfw images
+[2024-03-20 07:44:04] [LOG] === Logging in creators ===
+[2024-03-20 07:44:05] [LOG] client updated
+[2024-03-20 07:44:05] [LOG] Task successflly created
+[2024-03-20 07:44:05] [LOG] === Post creation started for B7540A60 ===
+[2024-03-20 07:44:07] [LOG] Error sharing images, Not enough sfw images
+[2024-03-20 07:45:03] [LOG] === Logging in creators ===
+[2024-03-20 07:45:04] [LOG] client updated
+[2024-03-20 07:45:04] [LOG] Task successflly created
+[2024-03-20 07:45:04] [LOG] === Post creation started for FFF4BBB8 ===
+[2024-03-20 07:45:06] [LOG] +++ creating post +++
+[2024-03-20 07:48:34] [LOG] === Logging in creators ===
+[2024-03-20 07:48:35] [LOG] client updated
+[2024-03-20 07:48:35] [LOG] Task successflly created
+[2024-03-20 07:48:35] [LOG] === Post creation started for BAECAB50 ===
+[2024-03-20 07:48:37] [LOG] +++ creating post +++

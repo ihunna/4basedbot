@@ -678,17 +678,22 @@ class Utils:
 		print(message)
 
 	@staticmethod
-	def get_images(images_folder,all=True,image_count=0):
+	def get_images(images_folder,all=True,image_count=0,tag=None,full_link=False):
 		try:
 			if os.path.exists(images_folder):
 				files = os.listdir(images_folder)
 
 				image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-				if not all:
-					images = [os.path.join(images_folder,file) for file in files if os.path.splitext(file)[1].lower() in image_extensions]
+				if not all and full_link:
+					images = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
+					if tag is not None:images = [image for image in images if image.startswith(f'{tag}-')]
 					images = images[:image_count]
+				
 				else:
 					images = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
+					if tag is not None:images = [image for image in images if image.startswith(f'{tag}-')]
+				
+				if full_link:images = [os.path.join(images_folder,image) for image in images]
 				return True,images
 			else:
 				return False, f'Folder {images_folder} does not exists'
@@ -697,14 +702,43 @@ class Utils:
 			return False, error
 		
 	@staticmethod
-	def share_images(days,images):
+	def share_images(posts,images_folder,total_images,total_sfw_images,total_nsfw_images):
 		try:
-			image_iterator = itertools.cycle(images)
-			for day in days:
-				day["images"] = [next(image_iterator) for _ in range(day["image_count"])]
-			return True,days
+			success,images = Utils.get_images(images_folder)
+			if not success:raise Exception(images)
+
+
+			sfw_images = [os.path.join(images_folder,image) for image in images if image.startswith(f'sfw-')][:total_sfw_images]
+			nsfw_images = [os.path.join(images_folder,image) for image in images if image.startswith(f'nsfw-')][:total_nsfw_images]
+			any_images = [os.path.join(images_folder,image) for image in images][:total_images]
+
+			image_configs = {
+				'sfw':{
+					'iter':itertools.cycle(sfw_images),
+					'total':total_sfw_images,
+					'available':len(sfw_images)
+		   		},
+				'nsfw':{
+					'iter':itertools.cycle(nsfw_images),
+					'total':total_nsfw_images,
+					'available':len(nsfw_images)
+		   		},
+				'all':{
+					'iter':itertools.cycle(any_images),
+					'total':total_images,
+					'available':len(any_images)
+		   		}
+			}
+			
+			for post in posts:
+				images_tag = post['image_source']
+				images = image_configs[images_tag]
+				
+				if images['available'] < images['total']:raise Exception(f'Not enough {images_tag} images')
+				post["images"] = [next(images['iter']) for _ in range(post["image_count"])]
+			return True,posts
 		except Exception as error:
-			return False, f'Error sharing images {error}'
+			return False, f'Error sharing images, {error}'
 		
 	@staticmethod
 	def update_client(client_msg):

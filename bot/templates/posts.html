@@ -72,6 +72,20 @@
                         <label for="max-workers">Number of concurrent actions</label>
                     </div>
                     <div class="post-holder">
+                        <div class="input-container flex">
+                            <div class="radio-box">
+                                <input type="radio" class="image-source" id="post-1-sfw" name="post-1-image-source" value="sfw" checked>
+                                <label for="post-1-sfw">SFW</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="image-source" id="post-1-nsfw" name="post-1-image-source" value="nsfw">
+                                <label for="post-1-nsfw">NSFW</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="image-source" id="post-1-any-image" name="post-1-image-source" value="all">
+                                <label for="post-1-any-image">All images</label>
+                            </div>
+                        </div>
                         <div class="input-container post">
                             <input type="number" id="post-1-image-count" name="post-1-image-count" autofocus tocomplete="delay" required>
                             <label for="post-1-image-count">Number of images</label>
