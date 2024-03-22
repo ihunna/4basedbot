@@ -770,7 +770,7 @@ def delete(category):
 				success, creator, _ = Utils.get_creators(multiple=False,creator=creator)
 				if not success:raise Exception(creator)
 				
-				success,msg = Creator().update_post(creator['data'],post_id,edit=False)
+				success,msg = _4BASED().update_post(creator['data'],post_id,edit=False)
 				if not success:raise Exception(msg)
 				deleted += 1
 
