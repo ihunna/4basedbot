@@ -767,9 +767,10 @@ def delete(category):
 			for item in data:
 				post_id = item['item']
 				creator = item['target']
+
 				success, creator, _ = Utils.get_creators(multiple=False,creator=creator)
 				if not success:raise Exception(creator)
-				
+
 				success,msg = _4BASED().update_post(creator['data'],post_id,edit=False)
 				if not success:raise Exception(msg)
 				deleted += 1

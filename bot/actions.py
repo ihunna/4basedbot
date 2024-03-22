@@ -217,7 +217,7 @@ class Creator:
 			if posted < 1:success,msg = False, f'No images uploaded on {username}, task {task_id}'
 			elif post.get('complete',False):success,msg = True, {
 				'id':post['_id'],
-				'creator':email,
+				'creator':user['id'],
 				'creator_username':username,
 				'posted_images':f'{posted} of {image_count}',
 				'post_link':f'https://4based.com/file-stack/{post["_id"]}',
@@ -249,6 +249,24 @@ class Creator:
 		
 
 class _4BASED:
+
+	def __init__(self):
+		self.proxies = Utils.load_proxies()
+		self.headers = {
+			'authority': 'rest.4based.com',
+			'accept': 'application/json',
+			'accept-language': 'en-US,en;q=0.9',
+			'content-type': 'application/json',
+			'origin': 'https://4based.com',
+			'referer': 'https://4based.com/',
+			'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+			'sec-ch-ua-mobile': '?1',
+			'sec-ch-ua-platform': '"Android"',
+			'sec-fetch-dest': 'empty',
+			'sec-fetch-mode': 'cors',
+			'sec-fetch-site': 'same-site'
+		}
+
 	def start(self,task_id,task,admin,days,max_workers):
 		creators,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
 		try:
@@ -649,7 +667,7 @@ class _4BASED:
 					headers=self.headers,
 					proxies=proxies
 				)
-				if not response.ok:raise Exception(response.text)
+				if not response.ok and response.status_code != 404:raise Exception(response.text)
 				
 				success,msg = Utils.delete_post(post_id)
 				if not success:raise Exception(msg)
