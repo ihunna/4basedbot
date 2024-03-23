@@ -182,9 +182,9 @@ class Creator:
 				image_len = len(img_bytes.getvalue())
 				
 				if post_type == 'schedule':
-					data = '{"model":null,"make":null,"orientation":null,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],"crop":{"x1":0,"y1":40,"x2":960,"y2":1240},'+f'"price":{_price},"to_be_posted_at":"{_schedule_date}","status":"to_be_posted"'+'}'
+					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price},"to_be_posted_at":"{_schedule_date}","status":"to_be_posted"'+'}'
 				else:
-					data = '{"model":null,"make":null,"orientation":null,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],"crop":{"x1":0,"y1":40,"x2":960,"y2":1240},'+f'"price":{_price}'+'}'
+					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price}'+'}'
 				
 				files = {
 					'chunk': (f'{uuid.uuid4()}', image_data, 'application/octet-stream'),
