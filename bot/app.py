@@ -390,13 +390,14 @@ def posts():
 def handle_posts(action):
 	try:
 		data = request.get_json()
-		total_posts,max_workers,posts = data['total_posts'],data.get('max-workers'),[]
+		total_posts,max_workers = data['total_posts'],data.get('max-workers')
+		media_type,posts = data.get('media-type','images'),[]
 
 		if action == 'add-post':
 			for post in range(1, total_posts + 1):
 				post_data = {
-					f'image_source':data[f'post-{post}-image-source'],
-					f'image_count': int(data[f'post-{post}-image-count']),
+					f'media_source':data[f'post-{post}-media-source'],
+					f'media_count': int(data[f'post-{post}-media-count']),
 					# f'paid_count': int(data[f'post-{post}-paid-count']),
 					f'price': data[f'post-{post}-price'],
 					f'caption': str(data.get(f'post-{post}-caption','')).replace('\n',''),
@@ -450,6 +451,7 @@ def handle_posts(action):
 					task_data,
 					admin,
 					posts,
+					media_type,
 					int(max_workers) if max_workers != '' else 20
 				))
 			
@@ -581,6 +583,7 @@ def configs():
 		tab = request.args.get('tab','proxies')
 		creator = request.args.get('creator','universal')
 		images_folder = os.path.join(configs_folder,creator,'images')
+		videos_folder = os.path.join(configs_folder,creator,'videos')
 		
 		if tab == 'images' and creator != 'universal':
 			category = request.args.get('category',None)
@@ -588,7 +591,7 @@ def configs():
 			page = int(request.args.get('page', 1))
 
 			images = []
-			success,msg = Utils.get_images(images_folder,tag=category)
+			success,msg = Utils.get_medias(images_folder,tag=category,media_type='images')
 			
 			if not success:Utils.write_log(msg)
 			
@@ -603,13 +606,39 @@ def configs():
 
 				return render_template(
 					'configs.html',creator=creator,
-					tab=tab,images=images,
+					tab=tab,medias=images,
 					total_pages=total_pages,
 					page=page,category=category)
 			
-			return render_template('configs.html',creator=creator,images=images)
+			return render_template('configs.html',creator=creator,medias=images)
 		
-		elif tab == 'upload-images':
+		if tab == 'videos' and creator != 'universal':
+			category = request.args.get('category',None)
+			items_per_page = 20
+			page = int(request.args.get('page', 1))
+			videos = []
+
+			success,msg = Utils.get_medias(videos_folder,tag=category,media_type='videos')
+			
+			if not success:Utils.write_log(msg)
+			
+			else:
+				videos = msg
+				start_idx = (page - 1) * items_per_page
+				end_idx = start_idx + items_per_page
+
+				total_pages = (len(videos) + items_per_page - 1) // items_per_page
+				page = total_pages if page > total_pages else page
+				videos = videos[start_idx:end_idx]
+
+				return render_template(
+					'configs.html',creator=creator,
+						tab=tab,medias=videos,
+						total_pages=total_pages,
+						page=page,category=category)
+			return render_template('configs.html',creator=creator,medias=videos)
+		
+		elif tab in ['upload-images','upload-videos']:
 			return render_template('configs.html',creator=creator,tab=tab)
 		
 		elif tab == 'captions' and creator != 'universal':
@@ -625,27 +654,33 @@ def configs():
 				creator=creator,captions=captions
 				)
 		
-		else:return redirect(url_for('files',category=tab))
+		else:return redirect(url_for('files',category='proxies'))
 		
-
 	except Exception as error:
 		Utils.write_log(error)
 		abort(500)
 
-@app.route('/image/<creator>/<folder>/<filename>',methods=['GET'])
+@app.route('/media/<creator>/<folder>/<filename>',methods=['GET'])
 def serve_image(creator,folder,filename):
-	image_folder = os.path.join(configs_folder,creator,folder)
-	image_path = os.path.join(configs_folder,creator,folder,filename)
-	if not os.path.isfile(image_path):abort(404)
-	return send_from_directory(image_folder,filename)
+	if folder == 'images':
+		image_folder = os.path.join(configs_folder,creator,folder)
+		image_path = os.path.join(configs_folder,creator,folder,filename)
+		if not os.path.isfile(image_path):abort(404)
+		return send_from_directory(image_folder,filename)
+	elif folder == 'videos':
+		video_folder = os.path.join(configs_folder,creator,folder)
+		video_path = os.path.join(configs_folder,creator,folder,filename)
+		if not os.path.isfile(video_path):abort(404)
+		return send_from_directory(video_folder,filename)
+	else:abort(404)
 
-@app.route('/images/<action>/<creator>/<category>',methods=['POST'])
+@app.route('/medias/<folder>/<action>/<creator>/<category>',methods=['POST'])
 @login_required
-def images(action,creator,category):
+def medias(action,folder,creator,category):
 	try:
 		if action == 'upload':
-			images_folder = os.path.join(configs_folder, creator, 'images')
-			os.makedirs(images_folder, exist_ok=True)
+			folder = os.path.join(configs_folder, creator,folder)
+			os.makedirs(folder, exist_ok=True)
 
 			saved = 0
 
@@ -655,12 +690,12 @@ def images(action,creator,category):
 				if file.filename == '':
 					return jsonify({'msg': 'No selected file'}), 400
 
-				file_path = os.path.join(images_folder, f'{category}-{file.filename}')
+				file_path = os.path.join(folder, f'{category}-{file.filename}')
 				file.save(file_path)
 
 				saved+=1
-			if saved >= 1:return jsonify({'msg': 'Images uploaded successfully'}), 200
-			else:return jsonify({'msg': f'{saved} images saved'}), 400
+			if saved >= 1:return jsonify({'msg': f'{folder} uploaded successfully'}), 200
+			else:return jsonify({'msg': f'{saved} {folder} saved'}), 400
 
 		else:return jsonify({'msg':'No action specified'}),400
 	except Exception as error:
@@ -733,15 +768,15 @@ def delete(category):
 		data = request.get_json()['data']
 		deleted = 0
 
-		if category == 'images':
+		if category in ['images','videos']:
 			for item in data:
 				target,filename = item['target'],item['item']
-				image_folder = os.path.join(configs_folder,target,'images')
-				image_path = os.path.join(image_folder,filename)
+				folder = os.path.join(configs_folder,target,category)
+				media_path = os.path.join(folder,filename)
 				
-				if not os.path.isfile(image_path):
-					return jsonify({'msg':f'{filename} does not exist, {deleted} images deleted'}),400
-				os.remove(image_path)
+				if not os.path.isfile(media_path):
+					return jsonify({'msg':f'{filename} does not exist, {deleted} {category} deleted'}),400
+				os.remove(media_path)
 
 				deleted += 1
 		

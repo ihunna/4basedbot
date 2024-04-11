@@ -10,14 +10,14 @@ Configs
                     justify-content: center;
                 }
             } */
-            #images-form{
+            #media-form{
                 position: relative;
             }
-            .upload-images input{
+            .upload-media input{
                 overflow: hidden;
                 width: 0;
             }
-            .upload-images label{
+            .upload-media label{
                 padding: 2px 10px;
                 font-size: 14px;
             }
@@ -25,26 +25,32 @@ Configs
         {%if tab != 'files'%}
             <div class="configs-nav scroll scroll-h">
                 <ul>
-                    {%if tab == 'upload-images'%}
-                        <li class="upload-images">
-                            <form action="/images/upload/{{creator}}/sfw" method="post" 
-                                enctype="multipart/form-data" id="images-form-sfw" 
-                                data-action-next-url="/configs?tab=images&creator={{creator}}"
-                                data-action-url="/images/upload/{{creator}}/sfw" data-action-category="sfw">
-                                <label for="image-upload-sfw" class="visually-hidden">SFW</label>
-                                <input type="file" id="image-upload-sfw" name="file" accept="image/*" multiple>
+                    {%if 'upload' in tab|lower%}
+                        {%set _tab = tab.split('-')[1]%}
+                        <li class="upload-media">
+                            <form action="/{{_tab}}/upload/{{creator}}/sfw" method="post" 
+                                enctype="multipart/form-data" id="media-form-sfw" 
+                                data-action-next-url="/configs?tab={{_tab}}&creator={{creator}}"
+                                data-action-folder="{{_tab}}"
+                                data-action-url="/medias/{{_tab}}/upload/{{creator}}/sfw" data-action-category="sfw">
+                                <label for="{{_tab}}-upload-sfw" class="visually-hidden">SFW</label>
+                                <input type="file" id="{{_tab}}-upload-sfw" name="file" accept="{%if _tab == 'videos'%}video/mp4,video/quicktime
+                                {%else%}image/* {%endif%}" multiple>
                             </form>
                         </li>
-                        <li class="upload-images">
-                            <form action="/images/upload/{{creator}}/nsfw" method="post" 
-                                enctype="multipart/form-data" id="images-form-nsfw" 
-                                data-action-next-url="/configs?tab=images&creator={{creator}}"
-                                data-action-url="/images/upload/{{creator}}/nsfw" data-action-category="nsfw">
-                                <label for="image-upload-nsfw" class="visually-hidden">NSFW</label>
-                                <input type="file" id="image-upload-nsfw" name="file" accept="image/*" multiple>
+                        <li class="upload-media">
+                            <form action="/{{tab}}/upload/{{creator}}/nsfw" method="post" 
+                                enctype="multipart/form-data" id="media-form-nsfw" 
+                                data-action-next-url="/configs?tab={{_tab}}&creator={{creator}}"
+                                data-action-folder="{{_tab}}"
+                                data-action-url="/medias/{{_tab}}/upload/{{creator}}/nsfw" data-action-category="nsfw">
+                                <label for="{{_tab}}-upload-nsfw" class="visually-hidden">NSFW</label>
+                                <input type="file" id="{{_tab}}-upload-nsfw" name="file" accept="{%if _tab == 'videos'%}video/mp4,video/quicktime
+                                {%else%}image/* {%endif%}" multiple>
                             </form>
                         </li>
                     {%else%}
+                        {%set _tab = tab%}
                         <li class="{%if tab=='captions'%} active {%endif%}">
                             <a href="/configs?tab=captions&creator={{creator}}">
                                 Captions
@@ -55,9 +61,14 @@ Configs
                                 Images
                             </a>
                         </li>
-                        <li class="upload-images">
-                            <a href="/configs?creator={{creator}}&tab=upload-images">
-                                Upload images
+                        <li class="{%if tab=='videos'%} active {%endif%}">
+                            <a href="/configs?tab=videos&creator={{creator}}">
+                                Videos
+                            </a>
+                        </li>
+                        <li class="upload-{{tab}}">
+                            <a href="/configs?creator={{creator}}&tab=upload-{{_tab}}">
+                                Upload {{_tab}}
                             </a>
                         </li>
                     {%endif%}
@@ -84,12 +95,12 @@ Configs
                 </ul>
             </div>
         {%endif%}
-        {%if tab == 'images'%}
+        {%if tab in ['images','videos']%}
             <div class="table-actions">
                 <ul class="select-items">
                     <li class="select all">
                         <span>select all</span> 
-                        <input type="checkbox" id="check-all" onclick="selectAll(this,'images-grid','grid')">
+                        <input type="checkbox" id="check-all" onclick="selectAll(this,'{{tab}}-grid','grid')">
                     </li>
                 </ul>
                 <ul class="toogle-view">
@@ -100,21 +111,21 @@ Configs
                         <i class="fas fa-filter"></i>
                         <span>filter by</span>
                         <div class="actions">
-                            <a href="/configs?tab=images&creator={{creator}}&category=sfw" 
+                            <a href="/configs?tab={{tab}}&creator={{creator}}&category=sfw" 
                             class="{%if category == 'sfw'%} active {%endif%} ">SFW</a>
-                            <a href="/configs?tab=images&creator={{creator}}&category=nsfw" 
+                            <a href="/configs?tab={{tab}}&creator={{creator}}&category=nsfw" 
                             class="{%if category == 'nsfw'%} active {%endif%} ">NSFW</a>
-                            <a href="/configs?tab=images&creator={{creator}}" 
+                            <a href="/configs?tab={{tab}}&creator={{creator}}" 
                             class="">Clear</a>
                         </div>
                     </li>
                 </ul>
             </div>
             <div class="grid-container">
-                <ul class="image-grid" id="images-grid">
-                    {%for image in images%}
-                        <li class="image-item grid-row"
-                            data-item="{{image}}"
+                <ul class="media-grid" id="{{tab}}-grid">
+                    {%for media in medias%}
+                        <li class="media-item grid-row"
+                            data-item="{{media}}"
                             data-action-target="{{creator}}">
                             <div class="item-header">
                                 <span class="select">
@@ -124,15 +135,19 @@ Configs
                                     <i class="fas fa-ellipsis-v"></i>
                                 </span>
                                 <ul class="actions-list">
-                                    <li data-action="delete"  data-action-url="/delete-items/images" 
-                                        data-action-message="Deleting image {{image}}"  data-item="{{image}}"
+                                    <li data-action="delete"  data-action-url="/delete-items/{{tab}}" 
+                                        data-action-message="Deleting item {{media}}"  data-item="{{media}}"
                                         data-action-target="{{creator}}"
-                                        onclick="handleAction(this,'images-grid','single')">
+                                        onclick="handleAction(this,'{{tab}}-grid','single')">
                                         <i class="fas fa-trash text-danger"></i>
                                     </li>
                                 </ul>
                             </div>
-                            <img src="/image/{{creator}}/images/{{image}}" alt="Cat 1">
+                            {%if tab == 'images'%}
+                                <img src="/media/{{creator}}/{{tab}}/{{media}}" alt="{{media}}">
+                            {%else%}
+                                <video src="/media/{{creator}}/{{tab}}/{{media}}"></video>
+                            {%endif%}
                         </li>
                     {%endfor%}
                 </ul>
@@ -191,10 +206,11 @@ Configs
                 {%endif%}
             </div>
 
-        {%elif tab == 'upload-images'%}
+        {%elif tab in ['upload-images','upload-videos']%}
+            {%set _tab = tab.split('-')[1]%}
             <div class="configs-container">
-                <h3 class="upload-images-info">
-                    Click on either image categories to upload the corresponding images
+                <h3 class="upload-medias-info">
+                    Click on either {{_tab}} categories to upload the corresponding {{_tab}}
                 </h3>
             </div>
 
@@ -233,7 +249,7 @@ Configs
                 resize: none;
                 font-size: 16px;
             }
-            .upload-images-info{
+            .upload-medias-info{
                 margin: auto;
                 border: 1px solid var(--success);
                 text-align: center;

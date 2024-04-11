@@ -140,7 +140,7 @@ class Utils:
 					id TEXT PRIMARY KEY,
 					creator TEXT,
 					creator_username TEXT,
-					posted_images TEXT,
+					posted_medias TEXT,
 					post_link TEXT,
 					task_id TEXT,
 					type TEXT,
@@ -148,6 +148,7 @@ class Utils:
 					price TEXT,
 				  	caption TEXT,
 				  	admin TEXT,
+				  	media_type TEXT,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
 			
 			conn.commit()
@@ -524,26 +525,27 @@ class Utils:
 			creator = post['creator']
 			creator_username = post['creator_username']
 			task_id = post['task_id']
-			posted_images = post['posted_images']
+			posted_medias = post['posted_medias']
 			post_link = post['post_link']
 			post_type = post['type']
 			schedule_date = post['schedule_date']
 			price = post['price']
 			caption = post['caption']
+			media_type = post['media_type']
 
 
 			cursor.execute(
 				"""INSERT INTO posts (
 				id, creator, 
 				creator_username, 
-				posted_images, 
+				posted_medias, 
 				post_link, task_id,
 				type,schedule_date,
-				price,caption,admin) 
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+				price,caption,admin,media_type) 
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
 				(post_id, creator, creator_username, 
-					posted_images, post_link, 
-					task_id,post_type,schedule_date,price,caption,admin))
+					posted_medias, post_link, 
+					task_id,post_type,schedule_date,price,caption,admin,media_type))
 			conn.commit()
 			
 			success,msg = True, 'Post added successfully'
@@ -624,7 +626,7 @@ class Utils:
 				'id': row[0], 
 				'creator': row[1], 
 				'creator_username': row[2], 
-				'posted_images': row[3], 
+				'posted_medias': row[3], 
 				'post_link':row[4],
 				'task_id': row[5],
 				'type':row[6],
@@ -632,7 +634,8 @@ class Utils:
 				'price':row[8],
 				'caption':row[9],
 				'admin':row[10],
-				'created_at':row[11]
+				'media_type':row[11],
+				'created_at':row[12]
 				} for row in rows]
 		except Exception as error:
 			success, posts = False, str(error)
@@ -678,67 +681,102 @@ class Utils:
 		print(message)
 
 	@staticmethod
-	def get_images(images_folder,all=True,image_count=0,tag=None,full_link=False):
+	def get_medias(folder,all=True,media_count=0,tag=None,full_link=False,media_type='images'):
 		try:
-			if os.path.exists(images_folder):
-				files = os.listdir(images_folder)
+			if os.path.exists(folder):
+				files = os.listdir(folder)
 
-				image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+				extensions = ['.mp4','.mov'] if media_type == 'videos' else ['.jpg', '.jpeg', '.png', '.gif']
 				if not all and full_link:
-					images = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
-					if tag is not None:images = [image for image in images if image.startswith(f'{tag}-')]
-					images = images[:image_count]
+					medias = [file for file in files if os.path.splitext(file)[1].lower() in extensions]
+					if tag is not None:medias = [media for media in medias if media.startswith(f'{tag}-')]
+					videos = videos[:media_count]
 				
 				else:
-					images = [file for file in files if os.path.splitext(file)[1].lower() in image_extensions]
-					if tag is not None:images = [image for image in images if image.startswith(f'{tag}-')]
+					medias = [file for file in files if os.path.splitext(file)[1].lower() in extensions]
+					if tag is not None:medias = [media for media in medias if media.startswith(f'{tag}-')]
 				
-				if full_link:images = [os.path.join(images_folder,image) for image in images]
-				return True,images
+				if full_link:medias = [os.path.join(folder,media) for media in medias]
+				return True,medias
 			else:
-				return False, f'Folder {images_folder} does not exists'
+				return False, f'Folder {folder} does not exists'
 		
 		except Exception as error:
 			return False, error
 		
 	@staticmethod
-	def share_images(posts,images_folder,total_images,total_sfw_images,total_nsfw_images):
+	def share_medias(posts,folder,media_type,total_medias,total_sfw_medias,total_nsfw_medias):
 		try:
-			success,images = Utils.get_images(images_folder)
-			if not success:raise Exception(images)
+			success,medias = Utils.get_medias(folder,media_type=media_type)
+			if not success:raise Exception(medias)
 
 
-			sfw_images = [os.path.join(images_folder,image) for image in images if image.startswith(f'sfw-')][:total_sfw_images]
-			nsfw_images = [os.path.join(images_folder,image) for image in images if image.startswith(f'nsfw-')][:total_nsfw_images]
-			any_images = [os.path.join(images_folder,image) for image in images][:total_images]
+			sfw_medias = [os.path.join(folder,media) for media in medias if media.startswith(f'sfw-')][:total_sfw_medias]
+			nsfw_medias = [os.path.join(folder,media) for media in medias if media.startswith(f'nsfw-')][:total_nsfw_medias]
+			any_medias = [os.path.join(folder,media) for media in medias][:total_medias]
 
-			image_configs = {
+			media_configs = {
 				'sfw':{
-					'iter':itertools.cycle(sfw_images),
-					'total':total_sfw_images,
-					'available':len(sfw_images)
+					'iter':itertools.cycle(sfw_medias),
+					'total':total_sfw_medias,
+					'available':len(sfw_medias)
 		   		},
 				'nsfw':{
-					'iter':itertools.cycle(nsfw_images),
-					'total':total_nsfw_images,
-					'available':len(nsfw_images)
+					'iter':itertools.cycle(nsfw_medias),
+					'total':total_nsfw_medias,
+					'available':len(nsfw_medias)
 		   		},
 				'all':{
-					'iter':itertools.cycle(any_images),
-					'total':total_images,
-					'available':len(any_images)
+					'iter':itertools.cycle(any_medias),
+					'total':total_medias,
+					'available':len(any_medias)
 		   		}
 			}
 			
 			for post in posts:
-				images_tag = post['image_source']
-				images = image_configs[images_tag]
+				medias_tag = post['media_source']
+				medias = media_configs[medias_tag]
 				
-				if images['available'] < images['total']:raise Exception(f'Not enough {images_tag} images')
-				post["images"] = [next(images['iter']) for _ in range(post["image_count"])]
+				if medias['available'] < medias['total']:raise Exception(f'Not enough {medias_tag} medias')
+				post["medias"] = [next(medias['iter']) for _ in range(post["media_count"])]
 			return True,posts
 		except Exception as error:
-			return False, f'Error sharing images, {error}'
+			return False, f'Error sharing medias, {error}'
+		
+	@staticmethod
+	def read_bytes(media_type,media_path):
+		try:
+			result = {
+				'config':'image/jpeg',
+				'type':'image'
+			}
+			if media_type == 'images':
+				img = Image.open(media_path)
+				media_bytes = io.BytesIO()
+				img.save(media_bytes, format='JPEG')
+			else:
+				with VideoFileClip(media_path) as video:
+					with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+						video.write_videofile(temp_file.name, codec='libx264', audio_codec='aac')
+
+						media_bytes = io.BytesIO()
+						with open(temp_file.name, 'rb') as f:media_bytes.write(f.read())
+				
+				result.update({
+					'config':'video/mp4',
+					'type':'video'
+				})
+
+			media_data = media_bytes.getvalue()
+			media_len = len(media_bytes.getvalue())
+
+			result.update({
+				'bytes':media_data,
+				'len':media_len
+			})
+			return True,result
+		except Exception as error:
+			return False,f'Error reading bytes {error}'
 		
 	@staticmethod
 	def update_client(client_msg):

@@ -11,10 +11,10 @@
             margin: auto;
             padding: 10px 20px;
         }
-        .post-holder:not(:first-child){
-            margin-top: 10px;
+        .post-holder:not(:last-child){
+            margin-top: 50px;
         }
-        .post-holder > .input-container{
+        .input-container{
             width: 100%;
         }
         .input-container > input:not(:last-child):focus,
@@ -50,7 +50,7 @@
             width: fit-content;
             padding: 2.5px 5px;
         }
-        .input-container.max-workers{
+        form > .input-container{
             width: 85% !important;
         }
         .input-container.date-picker-container{
@@ -71,24 +71,42 @@
                         <input type="number" id="max-workers" name="max-workers" value="10" max="50" autofocus tocomplete="delay" required>
                         <label for="max-workers">Number of concurrent actions</label>
                     </div>
+                    <div class="input-container">
+                    </div>
+                    <div class="input-container flex radio">
+                        <span style="padding: 0; margin: 0 auto 0 0;">
+                            Choose the media type between images and videos
+                        </span>
+                        <div class="radio-box">
+                            <input type="radio" class="media-type" id="images" name="media-type" value="images" checked>
+                            <label for="images">Images</label>
+                        </div>
+                        <div class="radio-box">
+                            <input type="radio" class="media-type" id="videos" name="media-type" value="videos">
+                            <label for="videos">Videos</label>
+                        </div>
+                    </div>
                     <div class="post-holder">
-                        <div class="input-container flex">
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose the media category
+                            </span>
                             <div class="radio-box">
-                                <input type="radio" class="image-source" id="post-1-sfw" name="post-1-image-source" value="sfw" checked>
+                                <input type="radio" class="media-source" id="post-1-sfw" name="post-1-media-source" value="sfw" checked>
                                 <label for="post-1-sfw">SFW</label>
                             </div>
                             <div class="radio-box">
-                                <input type="radio" class="image-source" id="post-1-nsfw" name="post-1-image-source" value="nsfw">
+                                <input type="radio" class="media-source" id="post-1-nsfw" name="post-1-media-source" value="nsfw">
                                 <label for="post-1-nsfw">NSFW</label>
                             </div>
                             <div class="radio-box">
-                                <input type="radio" class="image-source" id="post-1-any-image" name="post-1-image-source" value="all">
-                                <label for="post-1-any-image">All images</label>
+                                <input type="radio" class="media-source" id="post-1-any-media" name="post-1-media-source" value="all">
+                                <label for="post-1-any-media">Random</label>
                             </div>
                         </div>
                         <div class="input-container post">
-                            <input type="number" id="post-1-image-count" name="post-1-image-count" autofocus tocomplete="delay" required>
-                            <label for="post-1-image-count">Number of images</label>
+                            <input type="number" id="post-1-media-count" name="post-1-media-count" autofocus tocomplete="delay" required>
+                            <label for="post-1-media-count">Enter the number of media</label>
                         </div>
                         <!-- <div class="input-container" style="display:none">
                             <select name="post-1-paid-caption" id="post-1-paid-caption">
@@ -98,7 +116,10 @@
                                 {%endfor%}
                             </select>
                         </div> -->
-                        <div class="input-container flex">
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose the post pricing
+                            </span>
                             <div class="radio-box">
                                 <input type="radio" class="post-cost" id="post-1-cost-free" name="post-1-cost-type" value="free" checked>
                                 <label for="post-1-cost-free">Free</label>
@@ -112,7 +133,10 @@
                             <input type="number" id="post-1-price" name="post-1-price" value="0" tocomplete="delay" required>
                             <label for="post-1-price">Price of paid images</label>
                         </div>
-                        <div class="input-container flex">
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose captions source
+                            </span>
                             <div class="radio-box">
                                 <input type="radio" class="captions" id="post-1-caption-creator" name="post-1-caption-source" value="creator">
                                 <label for="post-1-caption-creator">Use creator's caption</label>
@@ -130,7 +154,10 @@
                                 {%endfor%}
                             </select>
                         </div>
-                        <div class="input-container flex">
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose post creation time
+                            </span>
                             <div class="radio-box">
                                 <input type="radio" id="post-1-schedule" name="post-1-run-type" value="schedule">
                                 <label for="post-1-schedule">Schedule post</label>
@@ -384,7 +411,8 @@
                         </div>              
                         <div class="table-cell badge">Creator</div>
                         <div class="table-cell">Price</div>
-                        <div class="table-cell">Images</div>
+                        <div class="table-cell">Medias</div>
+                        <div class="table-cell">Media type</div>
                         <div class="table-cell double-cell">Schedule date</div>
                         <div class="table-cell double-cell">Date</div>
                         <div class="table-cell actions">Actions</div>
@@ -403,12 +431,13 @@
                                     </span>
                                 </div>                             
                                 <div class="table-cell ">${{ post.price}}</div>
-                                <div class="table-cell ">{{ post.posted_images}}</div>
+                                <div class="table-cell ">{{ post.posted_medias}}</div>
                                 {% if post.type =='schedule'%}
                                     {%set schedule_date = post.schedule_date%}
                                 {%else%}
                                     {%set schedule_date = 'None'%}
                                 {%endif%}
+                                <div class="table-cell ">{{ post.media_type|capitalize}}</div>
                                 <div class="table-cell double-cell double-cell">{{schedule_date}}</div>
                                 <div class="table-cell double-cell double-cell">{{post.created_at}}</div>
                                 <div class="table-cell actions">

@@ -91,9 +91,11 @@ class Creator:
 				success,msg = Utils.add_creator(creator_id,email,user,admin)
 
 				images_folder = os.path.join(configs_folder,creator_id,'images')
+				videos_folder = os.path.join(configs_folder,creator_id,'videos')
 				captions_file = os.path.join(configs_folder,creator_id,'captions.txt')
 				
 				os.makedirs(images_folder,exist_ok=True)
+				os.makedirs(videos_folder,exist_ok=True)
 				with open(captions_file, 'w') as file:file.write("")
 
 			else:
@@ -110,7 +112,7 @@ class Creator:
 			return False,error
 		
 
-	def creat_post(self,task_id,user:dict,images:str,image_count:int,caption:str,captions:list,caption_source:str,post_type:str='post',schedule_date:str='',price:int=0,reuse_ip:bool=True):
+	def creat_post(self,task_id,user:dict,media_type:str,medias:str,media_count:int,caption:str,captions:list,caption_source:str,post_type:str='post',schedule_date:str='',price:int=0,reuse_ip:bool=True):
 		try:
 			Utils.write_log('+++ creating post +++')
 			success,task_status = Utils.check_task_status(task_id)
@@ -142,10 +144,10 @@ class Creator:
 				proxies = user['proxies']
 			else: proxies = random.choice(self.proxies)
 
-			if len(images) < image_count:raise Exception(f'Not enough images for {username} to match total images {image_count}')
+			if len(medias) < media_count:raise Exception(f'Not enough {media_type} for {username} to match total {media_type} {media_count}')
 			
 			json_data = {
-				'object_count': len(images),
+				'object_count': len(medias),
 			}
 
 			response = requests.post(
@@ -167,33 +169,29 @@ class Creator:
 			}
 			
 			post,posted = {},0
-			for i in range(image_count):
+			for i in range(media_count):
 				success,task_status = Utils.check_task_status(task_id)
 				if not success:raise Exception(task_status)
 				if task_status['status'].lower() in ['cancelled','canceled']:return False,  'Task canceled'
 				
-				image_path = images[i]
+				media_path = medias[i]
 
-				img = Image.open(image_path)
-				img_bytes = io.BytesIO()
-				img.save(img_bytes, format='JPEG')
-				image_data = img_bytes.getvalue()
+				success,media = Utils.read_bytes(media_type,media_path)
+				if not success:raise Exception(media)
 
-				image_len = len(img_bytes.getvalue())
-				
 				if post_type == 'schedule':
-					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price},"to_be_posted_at":"{_schedule_date}","status":"to_be_posted"'+'}'
+					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault",'+f'"{media["type"]}"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price},"to_be_posted_at":"{_schedule_date}","status":"to_be_posted"'+'}'
 				else:
-					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault","image"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price}'+'}'
+					data = '{"model":"iPhone 15 Plus","make":"Apple","orientation":1,"thumbnail":null,"categories":["media","vault",'+f'"{media["type"]}"],"private":false,'+f'"description":"{caption}","name":'+f'"{transfer_id}-{i}.jpg"'+',"tag":[],'+f'"price":{_price}'+'}'
 				
 				files = {
-					'chunk': (f'{uuid.uuid4()}', image_data, 'application/octet-stream'),
+					'chunk': (f'{uuid.uuid4()}', media['bytes'], 'application/octet-stream'),
 					'chunkId': (None, f'{i}'),
 					'chunkSizeStart': (None, '0'),
-					'chunkSizeEnd': (None, f'{image_len}'),
+					'chunkSizeEnd': (None, f'{media["len"]}'),
 					'chunkCount': (None, '1'),
-					'fileSize': (None, f'{image_len}'),
-					'fileType': (None, 'image/jpeg'),
+					'fileSize': (None, f'{media["len"]}'),
+					'fileType': (None, media['config']),
 					'guid': (None, f'{uuid.uuid4()}'),
 					'transferId': (None,transfer_id),
 					'position': (None, f'{i}'),
@@ -208,24 +206,25 @@ class Creator:
 				)
 
 				if response.ok:
-					os.remove(image_path)
+					os.remove(media_path)
 					posted += 1
 				else:raise Exception(f'Error creating post on {username}, task {task_id}: {response.text}')
 
 				post = response.json()
 
-			if posted < 1:success,msg = False, f'No images uploaded on {username}, task {task_id}'
+			if posted < 1:success,msg = False, f'No {media_type} uploaded on {username}, task {task_id}'
 			elif post.get('complete',False):success,msg = True, {
 				'id':post['_id'],
 				'creator':user['id'],
 				'creator_username':username,
-				'posted_images':f'{posted} of {image_count}',
+				'posted_medias':f'{posted} of {media_count}',
 				'post_link':f'https://4based.com/file-stack/{post["_id"]}',
 				'task_id':task_id,
 				'type':post_type,
 				'schedule_date':schedule_date,
 				'price':price,
-				'caption':caption
+				'caption':caption,
+				'media_type':media_type
 				}
 			else:success,msg = False,f'Error creating post on {username}, task {task_id}'
 
@@ -267,7 +266,7 @@ class _4BASED:
 			'sec-fetch-site': 'same-site'
 		}
 
-	def start(self,task_id,task,admin,days,max_workers):
+	def start(self,task_id,task,admin,days,media_type,max_workers):
 		creators,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
 		try:
 			Utils.write_log(f'=== Logging in creators ===')
@@ -296,6 +295,7 @@ class _4BASED:
 					admin,
 					creator,
 					days,
+					media_type,
 					max_workers
 				) for creator in creators] 
 
@@ -387,7 +387,7 @@ class _4BASED:
 			success,msg = Utils.update_client({'task':task_data,'type':'task'})
 			if not success:Utils.write_log(msg)
 		
-	def post(self,task:dict,admin:str,creator:dict,post_data:dict,max_workers):
+	def post(self,task:dict,admin:str,creator:dict,post_data:dict,media_type:str,max_workers):
 		task_status,task_msg,completed,fails = 'failed',f'Post creation started',0,0
 		try:
 			task_id = task['id']
@@ -402,11 +402,16 @@ class _4BASED:
 			if not success:raise Exception(creator)
 
 			images_folder = os.path.join(configs_folder,creator['id'],'images')
-			total_images = sum([post['image_count'] for post in post_data])
-			total_sfw_images = sum([post['image_count'] for post in post_data  if post['image_source']  == 'sfw'])
-			total_nsfw_images = sum([post['image_count'] for post in post_data  if post['image_source']  == 'nsfw'])
+			videos_folder = os.path.join(configs_folder,creator['id'],'videos')
+			folders = {
+				'images':images_folder,
+				'videos':videos_folder
+			}
+			total_medias = sum([post['media_count'] for post in post_data])
+			total_sfw_images = sum([post['media_count'] for post in post_data  if post['media_source']  == 'sfw'])
+			total_nsfw_images = sum([post['media_count'] for post in post_data  if post['media_source']  == 'nsfw'])
 
-			success,post_data = Utils.share_images(post_data,images_folder,total_images,total_sfw_images,total_nsfw_images)
+			success,post_data = Utils.share_medias(post_data,folders[media_type],media_type,total_medias,total_sfw_images,total_nsfw_images)
 			if not success:raise Exception(post_data)
 
 			captions_file = os.path.join(configs_folder,creator['id'],'captions.txt')
@@ -420,8 +425,9 @@ class _4BASED:
 				args = [(
 					task_id,
 					creator,
-					day['images'],
-					day['image_count'],
+					media_type,
+					day['medias'],
+					day['media_count'],
 					day['caption'],
 					captions,
 					day['caption_source'],

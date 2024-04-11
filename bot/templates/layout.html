@@ -159,51 +159,65 @@
     {%if g.page == 'configs'%}
         <script>
             try{
-                const imageForms = document.querySelectorAll('[id*="images-form"]');
-
-                imageForms.forEach(e=>{
+                const mediaForms = document.querySelectorAll('[id*="media-form"]');
+                mediaForms.forEach(e=>{
+                    const actionFolder = e.getAttribute('data-action-folder');
                     const actionCategory = e.getAttribute('data-action-category');
-                    const imageInput = e.querySelector(`#image-upload-${actionCategory}`);
+                    const mediaInput = e.querySelector(`#${actionFolder}-upload-${actionCategory}`);
                     const label = e.querySelector('label')
                     const nextActionUrl = e.getAttribute('data-action-next-url');
                     const actionUrl = e.getAttribute('data-action-url');
-                    console.log(actionUrl)
                     
-                    imageInput.addEventListener('change', async () => {
-                        const action = 'Image upload';
-                        toogleLoader('show', `Uploading images  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+                    mediaInput.addEventListener('change', async () => {
+                        const action = 'Media upload';
+                        toogleLoader('show', `Uploading Medias  &nbsp;<i class="fas fa fa-gear icon spinner"></i>`);
+                        
                         // Create a FormData object and append the selected files
                         const formData = new FormData();
-                        const files = imageInput.files;
+                        const files = mediaInput.files;
+                        const maxSizeInMb =  10;
+                        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
+
+                        let totalSizeInmb = 0;
+                        let totalSizeInBytes = totalSizeInmb * 1024 * 1024;
+
                         for (let i = 0; i < files.length; i++) {
                             formData.append(`file${i}`, files[i]);
-                        }
-
+                            totalSizeInBytes += files[i].size;
+                        } 
+                        
+                        totalSizeInmb = Math.round(totalSizeInBytes / 1024 / 1024)
                         // Perform the image upload
-                        const response = await fetch(actionUrl, {
-                            method: 'POST',
-                            body: formData,
-                        });
-
-                        if (response.ok) {
-                            toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
-                            setTimeout(() => {
-                                toogleLoader('no-show');
+                        if (totalSizeInmb <= maxSizeInMb){
+                            const response = await fetch(actionUrl, {
+                                method: 'POST',
+                                body: formData,
+                            });
+    
+                            if (response.ok) {
+                                toogleLoader('show', `${action} successful  &nbsp;<i class="fas fa-check icon"></i>`, 'success');
                                 setTimeout(() => {
-                                    window.location.href = nextActionUrl;
-                                }, 700);
-                            }, 3000);
-                        } else {
-                            if (response.status !== 500) {
-                                const responseData = await response.json();
-                                console.error(`${action} failed:`, responseData.msg);
-                                toogleLoader('show', `${responseData.msg}`, 'error');
-                                setTimeout(() => toogleLoader('no-show'), 3000);
+                                    toogleLoader('no-show');
+                                    setTimeout(() => {
+                                        window.location.href = nextActionUrl;
+                                    }, 700);
+                                }, 3000);
                             } else {
-                                toogleLoader('show', `${action} failed`, 'error');
-                                console.error(`${action} failed:`, response.statusText);
-                                setTimeout(() => toogleLoader('no-show'), 3000);
+                                if (response.status !== 500) {
+                                    const responseData = await response.json();
+                                    console.error(`${action} failed:`, responseData.msg);
+                                    toogleLoader('show', `${responseData.msg}`, 'error');
+                                    setTimeout(() => toogleLoader('no-show'), 3000);
+                                } else {
+                                    toogleLoader('show', `${action} failed`, 'error');
+                                    console.error(`${action} failed:`, response.statusText);
+                                    setTimeout(() => toogleLoader('no-show'), 3000);
+                                }
                             }
+                        }else{
+                            toogleLoader('show', `${totalSizeInmb}MB is larger than the max size ${maxSizeInMb}MB`, 'error');
+                            console.error('Total size of byte (5mb) exceeded');
+                            setTimeout(() => toogleLoader('no-show'), 3000);
                         }
                     });
                 })
