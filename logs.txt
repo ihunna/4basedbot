@@ -118,3 +118,4 @@
 [2024-04-11 17:57:23] [LOG] client updated
 [2024-04-11 17:57:23] [LOG] Task successflly created
 [2024-04-11 17:57:25] [LOG] +++ creating post +++
+[2024-04-12 18:24:37] [LOG] Encountered unknown tag 'endinf'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.

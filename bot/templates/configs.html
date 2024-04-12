@@ -66,11 +66,13 @@ Configs
                                 Videos
                             </a>
                         </li>
-                        <li class="upload-{{tab}}">
-                            <a href="/configs?creator={{creator}}&tab=upload-{{_tab}}">
-                                Upload {{_tab}}
-                            </a>
-                        </li>
+                        {%if tab != 'captions'%}
+                            <li class="upload-{{tab}}">
+                                <a href="/configs?creator={{creator}}&tab=upload-{{_tab}}">
+                                    Upload {{_tab}}
+                                </a>
+                            </li>
+                        {%endif%}
                     {%endif%}
                 </ul>
             </div>
@@ -83,12 +85,12 @@ Configs
                         </a>
                     </li>
                     <li class="{%if category=='captions'%} active {%endif%}">
-                        <a href="/configs?tab=captions">
+                        <a href="/files/captions">
                             Captions
                         </a>
                     </li>
                     <li class="{%if category=='creators'%} active {%endif%}">
-                        <a href="/configs?tab=creators">
+                        <a href="/files/creators">
                             Add creators
                         </a>
                     </li>
@@ -220,7 +222,7 @@ Configs
                     data-action="update" 
                     data-action-message="Captions update"
                     data-action-category="captions"
-                    data-action-url="/config/captions/update">
+                    data-action-url="/config/captions/update/{{creator}}">
                     {%if captions and captions|length > 0%}
                         <textarea class="scroll scroll-v" name="configs" >{%for cap in captions%}{{cap}}{%endfor%}</textarea>
                     {%else%}
