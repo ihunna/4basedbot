@@ -137,21 +137,28 @@
                             <div class="table-cell actions">
                                 <ul class="actions-list">
                                     <li class="tags">
-                                        <a href="/posts?action=get-items&item={{creator_details.identifier}}&key=creator"
+                                        <a href="/posts?action=get-items&item={{creator.id}}&key=creator"
                                             class="bg-primary light">
                                             <i class="fas fa-eye"></i>
                                             posts
                                         </a>
                                     </li>
                                     <li class="tags">
-                                        <a href="/configs?creator={{creator_details.identifier}}&tab=images"
+                                        <a href="/configs?creator={{creator.id}}&tab=images"
                                             class="bg-primary light">
                                             <i class="fas fa-image"></i>
                                             images
                                         </a>
                                     </li>
                                     <li class="tags">
-                                        <a href="/configs?creator={{creator_details.identifier}}&tab=captions"
+                                        <a href="/configs?creator={{creator.id}}&tab=videos"
+                                            class="bg-primary light">
+                                            <i class="fas fa-video"></i>
+                                            videos
+                                        </a>
+                                    </li>
+                                    <li class="tags">
+                                        <a href="/configs?creator={{creator.id}}&tab=captions"
                                             class="bg-primary light">
                                             <i class="fas fa-tasks"></i>
                                             captions
