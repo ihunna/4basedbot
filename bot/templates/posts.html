@@ -67,23 +67,58 @@
                     <h3 class="form-header">
                         Fill the form to start operation for all added creators, add more posts if needed.
                     </h3>
-                    <div class="input-container max-workers">
-                        <input type="number" id="max-workers" name="max-workers" value="10" max="50" autofocus tocomplete="delay" required>
-                        <label for="max-workers">Number of concurrent actions</label>
-                    </div>
-                    <div class="input-container">
-                    </div>
-                    <div class="input-container flex radio">
-                        <span style="padding: 0; margin: 0 auto 0 0;">
-                            Choose the media type between images and videos
-                        </span>
-                        <div class="radio-box">
-                            <input type="radio" class="media-type" id="images" name="media-type" value="images" checked>
-                            <label for="images">Images</label>
+                    <div class="u-settings input-container">
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose creators source
+                            </span>
+                            <div class="radio-box">
+                                <input type="radio" class="creators" id="select-creators" name="creators-source" value="select-creators">
+                                <label for="select-creators">Use selected creators</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="creators" id="universal-creators" name="creators-source" value="universal" checked>
+                                <label for="universal-creators">Use universal creators</label>
+                            </div>
                         </div>
-                        <div class="radio-box">
-                            <input type="radio" class="media-type" id="videos" name="media-type" value="videos">
-                            <label for="videos">Videos</label>
+                        <div class="input-container" style="display: none;">
+                            <select name="select-creators" id="select-creators" multiple>
+                                <option value="">Choose creators</option>
+                                {% for creator in creators%}
+                                    <option value="{{creator.id}}">{{creator.data.details.user.identifier}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>
+                        <div class="input-container max-workers">
+                            <input type="number" id="max-workers" name="max-workers" value="10" max="50" autofocus tocomplete="delay" required>
+                            <label for="max-workers">Number of concurrent actions</label>
+                        </div>
+                        <div class="input-container schedule-time">
+                            <input type="text" id="schedule-time" name="schedule-time" value="09:00"  autofocus tocomplete="delay" required>
+                            <label for="schedule-time">Daily run time</label>
+                        </div>
+                        <div class="input-container like-pattern">
+                            <input type="text" id="like-pattern" name="like-pattern" value="15-20,10-15,10-15,5-10,5-10"  autofocus tocomplete="delay" required>
+                            <label for="like-pattern">Like pattern</label>
+                        </div>
+                        <div class="input-container comment-pattern">
+                            <input type="text" id="comment-pattern" name="comment-pattern" value="1,0,1,0,1"  autofocus tocomplete="delay" required>
+                            <label for="comment-pattern">Comment pattern</label>
+                        </div>
+                        <div class="input-container">
+                        </div>
+                        <div class="input-container flex radio">
+                            <span style="padding: 0; margin: 0 auto 0 0;">
+                                Choose the media type between images and videos
+                            </span>
+                            <div class="radio-box">
+                                <input type="radio" class="media-type" id="images" name="media-type" value="images" checked>
+                                <label for="images">Images</label>
+                            </div>
+                            <div class="radio-box">
+                                <input type="radio" class="media-type" id="videos" name="media-type" value="videos">
+                                <label for="videos">Videos</label>
+                            </div>
                         </div>
                     </div>
                     <div class="post-holder">
@@ -159,11 +194,11 @@
                                 Choose post creation time
                             </span>
                             <div class="radio-box">
-                                <input type="radio" id="post-1-schedule" name="post-1-run-type" value="schedule">
+                                <input type="radio" class="run-type" id="post-1-schedule" name="post-1-run-type" value="schedule">
                                 <label for="post-1-schedule">Schedule post</label>
                             </div>
                             <div class="radio-box">
-                                <input type="radio" id="post-1-run-now" name="post-1-run-type" value="run-now" checked>
+                                <input type="radio"  class="run-type" id="post-1-run-now" name="post-1-run-type" value="run-now" checked>
                                 <label for="post-1-run-now">Post now</label>
                             </div>
                         </div>
@@ -282,6 +317,18 @@
                                     captionSelect.setAttribute('required','required');
                                     captionSelectHolder.style.display = '';
                                 }
+                            }else if (radio.classList.contains('creators')){
+                                const creatorsSelect = newpostHolder.querySelector('[name="select-creators"]');
+                                console.log(creatorsSelect)
+                                const creatorsSelectHolder = creatorsSelect.parentNode;
+                                
+                                if (this.value == 'universal'){
+                                    creatorsSelect.removeAttribute('required');
+                                    creatorsSelectHolder.style.display = 'none';
+                                }else{
+                                    creatorsSelect.setAttribute('required','required');
+                                    creatorsSelectHolder.style.display = '';
+                                }
                             }else if(radio.classList.contains('post-cost')){
                                 const priceInput = newpostHolder.querySelector('[name^="post-"][id$="-price"]');
                                 const priceInputHolder = priceInput.parentNode;
@@ -296,12 +343,14 @@
                                     priceInputHolder.style.display = 'None';
                                 }
 
-                            }else{
+                            }else if (radio.classList.contains('run-type')){
                                 if (this.value === 'schedule') {
                                     datePicker.style.display = ''; // Show date picker
                                 } else {
                                     datePicker.style.display = 'none'; // Hide date picker
                                 }
+                            }else{
+                                {}
                             }
                         });
                     });
@@ -362,6 +411,8 @@
         
                 // Event listener for the "Add post" button
                 document.querySelector('#add-post').addEventListener('click', addpostHolder);
+                const uSettings = document.querySelector('.u-settings')
+                updateRadioButtons(uSettings, postCounter);
             });
         </script>
     {%elif action == 'edit-post'%}

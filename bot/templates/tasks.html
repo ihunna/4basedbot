@@ -32,7 +32,7 @@
                             <div class="table-cell double-cell">{{ task.created_at}}</div>
                             <div class="table-cell badge task_status">
                                 <span class="
-                                {%if task.status|lower in ['success','completed','running']%}bg-success
+                                {%if task.status|lower in ['success','completed','running','posting','liking','commenting']%}bg-success
                                 {%elif task.status|lower in ['error','canceled','cancelled','failed','cancelling']%}bg-danger
                                 {%elif task.status|lower == 'pending'%}bg-warning
                                 {%endif%}">
@@ -43,7 +43,12 @@
                                 <ul class="actions-list">
                                     {%if task.status == 'success'%}
                                         <li class="tags">
-                                            <a href="/{{task.type}}?action=get-items&item={{task.id}}&key=task_id"
+                                            {%if task.type == 'users'%}
+                                                {%set _type_url = 'creators'%}
+                                            {%else%}
+                                                {%set _type_url = task.type%}
+                                            {%endif%}
+                                            <a href="/{{_type_url | e}}?action=get-items&item={{task.id}}&key=task_id"
                                                 class="bg-primary light">
                                                 <i class="fas fa-eye"></i>
                                                 {{task.type}}
@@ -56,7 +61,7 @@
                                     onclick="handleAction(this,'tasks-table','single')">
                                         <i class="fas fa-trash text-danger"></i>
                                     </li>
-                                    {%if task.status|lower in ['running','pending']%}
+                                    {%if task.status|lower in ['running','pending','posting','liking','commenting']%}
                                         <li data-action="stop" data-action-url="/task/stop" 
                                             data-action-message="Stopping Task {{task.id}}"
                                             data-item="{{task.id}}" data-action-target="{{task.creator}}"

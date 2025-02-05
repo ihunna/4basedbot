@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from app_configs import creators_file,configs_folder
+from app_configs import creators_file,configs_folder,universal_files
 from utils import Utils
 from configs import *
 import io
@@ -28,7 +28,7 @@ class Creator:
 		if type == 'x-auth-resource':
 			return ''.join(random.choices(string.ascii_letters.upper() + string.digits + string.ascii_letters, k=len('2NTN5vEez9')))
 		
-	def login(self,admin,email,password,reuse_ip=True,task_id=None):
+	def login(self,admin,email,password,reuse_ip=True,task_id=None,category='creators'):
 		try:
 			success,result,user,new_user = False,'Login failed',{},True
 			
@@ -53,6 +53,8 @@ class Creator:
 
 			creator_id = user.get('id',None)
 			user = user.get('data',{})
+
+			# print(user)
 
 			if len(user.items()) >= 1:new_user = False
 
@@ -88,7 +90,7 @@ class Creator:
 
 			if new_user:
 				creator_id = str(uuid.uuid4()).upper()[:8]
-				success,msg = Utils.add_creator(creator_id,email,user,admin)
+				success,msg = Utils.add_creator(creator_id,email,user,admin,category=category,task_id=task_id)
 
 				images_folder = os.path.join(configs_folder,creator_id,'images')
 				videos_folder = os.path.join(configs_folder,creator_id,'videos')
@@ -206,7 +208,8 @@ class Creator:
 				)
 
 				if response.ok:
-					os.remove(media_path)
+					success,msg = Utils.move_posted_media(media_path)
+					if not success:raise Exception(msg)
 					posted += 1
 				else:raise Exception(f'Error creating post on {username}, task {task_id}: {response.text}')
 
@@ -237,14 +240,133 @@ class Creator:
 		
 	def update(self,user:dict,data:dict):
 		try:
-			user_id,user = user['id'],user['data']
+			user_email,user_id,user = user['email'],user['id'],user['data']
 			for key,value in data.items():
 				user[key] = value
-			success,msg = Utils.update_creator(user_id,user)
+			success,msg = Utils.update_creator(user_id,user_email,user)
 			if not success:raise Exception(msg)
 			return True,user
 		except Exception as error:
 			return False, error
+		
+
+	def post_actions(self,admin,user:dict,post_id:str,task_id,action:str='get-post',comment:str=''):
+		user_id = None
+		try:
+
+			username = user['data']['details']['user']['name']
+			user_email = user['data']['details']['user']['identifier']
+			user_password = user['data']['details']['user']['password']
+
+			success,user = self.login(admin,user_email,user_password,task_id=task_id)
+			if not success:raise Exception(user)
+
+			user_agent = Utils.generate_user_agent('android',1)
+			token,auth_resource = user['details']['credentials']['token'],user['details']['credentials']['resource']
+			user_id = user['details']['user']['_id']
+
+			self.headers.update({
+				'user-agent': user_agent,
+				'x-auth-resource': auth_resource,
+				'x-auth-token':token
+			})
+
+			if user['reuse_ip'] and 'proxies' in user.keys():
+				proxies = user['proxies']
+			else: proxies = random.choice(self.proxies)
+
+			session = requests.Session()
+			session.headers.update(self.headers)
+			session.proxies.update(proxies)
+
+			if action == 'get-post':
+
+				params = {
+					'with_first_three_comments': 'true',
+					'with_source': 'true',
+				}
+
+				response = session.get(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}',
+					params=params
+				)
+
+				if not response.ok:raise Exception(response.text)
+				return True, response.json()
+			
+			elif action == 'view-post':
+				
+				response = session.get(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
+				)
+
+				if not response.ok:raise Exception(response.text)
+				return True, f'{post_id} post viewed successfully by {username}'
+			
+			elif action == 'like-post':
+
+				response = session.get(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
+				)
+				if not response.ok:raise Exception(response.text)
+
+				response = session.post(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/like',
+				)
+
+				if not response.ok:raise Exception(response.text)
+				return True, f'{post_id} post liked successfully by {username}',user_id
+			
+			elif action == 'like-comment':
+
+				response = session.get(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
+				)
+				if not response.ok:raise Exception(response.text)
+
+				response = session.post(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/like',
+				)
+
+				if not response.ok:raise Exception(response.text)
+				# return True, f'{post_id} post liked successfully by {username}',user_id
+			
+
+				#comment on post
+				time.sleep(random.randint(5,10))
+
+				json_data = {
+					'text': comment,
+				}
+
+				response = session.post(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/comment',
+					json=json_data
+				)
+
+				if not response.ok:raise Exception(response.text)
+				return True, f'Post liked and comment posted on {post_id} successfully by {username}',user_id
+			
+			elif action == 'comment':
+				response = session.get(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
+				)
+				if not response.ok:raise Exception(response.text)
+
+				json_data = {
+					'text': comment,
+				}
+
+				response = session.post(
+					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/comment',
+					json=json_data
+				)
+
+				if not response.ok:raise Exception(response.text)
+				return True, f'comment posted on {post_id} successfully by {username}',user_id
+			
+		except Exception as error:
+			return False,error,user_id
 		
 
 class _4BASED:
@@ -266,23 +388,24 @@ class _4BASED:
 			'sec-fetch-site': 'same-site'
 		}
 
-	def start(self,task_id,task,admin,days,media_type,max_workers):
-		creators,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
+	def start_post(self,task,admin,posts,media_type,max_workers,selected_creators=[]):
+		creators,task_status,task_msg,completed,fails,completed_post_data = [],'failed',f'Post creation started',0,0,[]
 		try:
 			Utils.write_log(f'=== Logging in creators ===')
 			
-			client_msg = {'msg':f'Logging all creators before posting on {task_id}','status':'success','type':'message'}
+			task_id = task['id']
+			client_msg = {'msg':f'Logging in all creators before posting on {task_id}','status':'success','type':'message'}
 			success,msg = Utils.update_client(client_msg)
 			if not success:Utils.write_log(msg)
 
-			success,creators,total_creators = Utils.get_creators(admin=admin,limit=100)
+			success,creators,total_creators = Utils.get_creators(admin=admin,limit=100,selected_creators=selected_creators)
 			if not success:raise Exception(creators)
 			
 			len_creators = len(creators)
 			if len_creators < total_creators:
 				for i in range(total_creators - len_creators):
 					offset = len_creators + i
-					success,msg,total_creators = Utils.get_creators(admin=admin,limit=100,offset=offset)
+					success,msg,total_creators = Utils.get_creators(admin=admin,limit=100,offset=offset,selected_creators=selected_creators)
 					if not success:raise Exception(msg)
 					creators += msg
 
@@ -294,7 +417,7 @@ class _4BASED:
 					task,
 					admin,
 					creator,
-					days,
+					posts,
 					media_type,
 					max_workers
 				) for creator in creators] 
@@ -306,6 +429,111 @@ class _4BASED:
 					if task_status['status'].lower() in ['cancelled','canceled']:break
 
 					future = executor.submit(self.post, *arg)
+					futures.append(future)
+
+				for future in as_completed(futures):
+					success,task_status = Utils.check_task_status(task_id)
+					if not success:raise Exception(task_status)
+
+					if task_status['status'].lower() in ['cancelled','canceled']:
+						for remaining_future in futures:
+							remaining_future.cancel()
+						break
+
+					success,task_status,result,post_ids = future.result()
+					if success:
+						completed += 1
+
+						completed_post_data += post_ids
+
+						client_msg = {'msg':result,'status':'success','type':'message'}
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+
+
+					elif not success and task_status == 'Task canceled':
+						task_status = 'canceled'
+						client_msg = {'msg':result,'status':'error','type':'message'}
+						
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+						break
+					
+					else:
+						fails += 1
+						client_msg = {'msg':result,'status':'error','type':'message'}
+						
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+
+					task_msg = result
+
+		except Exception as error:
+			Utils.write_log(error)
+			task_status = 'failed'
+			task_msg = f'Error starting posts on {task_id} : {error}'
+		
+		finally:
+			if task_status == 'canceled':
+				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
+				task_msg = client_msg['msg']
+
+			elif completed == len(creators) and len(creators) > 0:
+				task_status = 'success'
+				client_msg = {'msg':f'Posting successful on task {task_id}','status':'success','type':'message'}
+				
+			elif  fails > len(creators) // 2:
+				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
+				task_status = 'failed'
+				task_msg = client_msg['msg']
+			
+			elif task_status == 'failed':
+				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
+			
+			else:
+				task_status = 'completed'
+				client_msg = {'msg':f'{completed} posts successful task:{task_id}','status':'success','type':'message'}
+				task_msg = client_msg['msg']
+			if task_status not in ['success','completed']:return False,task_status,task_msg,client_msg,completed_post_data
+			return True,task_status,task_msg,client_msg,completed_post_data
+		
+
+	def start_like_comment(self,task:dict,admin:str,action_count:int,max_workers:int,action:str='like-post'):
+		posts,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
+		try:
+			Utils.write_log(f'=== Getting posts on tasks {task_id } ===')
+
+			action_lingo = {'like-post':'liking','comment':'commenting'}
+			
+			task_id = task['id']
+			client_msg = {'msg':f'Getting all posts before {action_lingo[action]} on {task_id}','status':'success','type':'message'}
+			success,msg = Utils.update_client(client_msg)
+			if not success:Utils.write_log(msg)
+
+			# success,posts,total_posts = Utils.get_posts(admin=admin,limit=100,constraint='task_id',keyword=task_id)
+			# if not success:raise Exception(posts)
+			
+			# len_posts = len(posts)
+			# if len_posts < total_posts:
+			# 	for i in range(total_posts - len_posts):
+			# 		offset = len_posts + i
+			# 		success,msg,total_posts = Utils.get_posts(admin=admin,limit=100,offset=offset,constraint='task_id',keyword=task_id)
+			# 		if not success:raise Exception(msg)
+			# 		posts += msg
+
+			posts = task['posts']
+
+			with ThreadPoolExecutor(max_workers=max_workers) as executor:
+				args = [(task,admin,post,action_count) for post in posts] 
+				kwargs = [{'action':action,'action_count':action_count} for post in posts]
+
+				futures = []
+				for arg, kwarg in zip (args,kwargs):
+					success,task_status = Utils.check_task_status(task_id)
+					if not success:raise Exception(task_status)
+					if task_status['status'].lower() in ['cancelled','canceled']:break
+
+					future = executor.submit(self.like_comment, *arg, **kwarg)
 					futures.append(future)
 
 				for future in as_completed(futures):
@@ -353,11 +581,11 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(creators) and len(creators) > 0:
+			elif completed == len(posts) and len(posts) > 0:
 				task_status = 'success'
-				client_msg = {'msg':f'{task_id} successful ','status':'success','type':'message'}
+				client_msg = {'msg':f'Posting successful on task {task_id}','status':'success','type':'message'}
 				
-			elif  fails > len(creators) // 2:
+			elif  fails > len(posts) // 2:
 				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
 				task_status = 'failed'
 				task_msg = client_msg['msg']
@@ -367,28 +595,14 @@ class _4BASED:
 			
 			else:
 				task_status = 'completed'
-				client_msg = {'msg':f'{completed} items successful task:{task_id}','status':'success','type':'message'}
+				client_msg = {'msg':f'{completed} posts successful task:{task_id}','status':'success','type':'message'}
 				task_msg = client_msg['msg']
-
-			success,msg = Utils.update_client(client_msg)
-			if not success:Utils.write_log(msg)
-
-			success,msg = Utils.update_task(task_id,{
-				'status':task_status,
-				'message':task_msg
-			})
-			if not success:Utils.write_log(msg)
-			
-			task_data = task
-			task_data.update(
-				{'updated':str(datetime.now()),
-				'status':task_status})
-
-			success,msg = Utils.update_client({'task':task_data,'type':'task'})
-			if not success:Utils.write_log(msg)
+			if task_status not in ['success','completed']:return False,task_status,task_msg,client_msg
+			return True,task_status,task_msg,client_msg,completed,fails
 		
-	def post(self,task:dict,admin:str,creator:dict,post_data:dict,media_type:str,max_workers):
-		task_status,task_msg,completed,fails = 'failed',f'Post creation started',0,0
+		
+	def post(self,task:dict,admin:str,creator:dict,posts:list,media_type:str,max_workers):
+		post_ids,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
 		try:
 			task_id = task['id']
 
@@ -407,12 +621,12 @@ class _4BASED:
 				'images':images_folder,
 				'videos':videos_folder
 			}
-			total_medias = sum([post['media_count'] for post in post_data])
-			total_sfw_images = sum([post['media_count'] for post in post_data  if post['media_source']  == 'sfw'])
-			total_nsfw_images = sum([post['media_count'] for post in post_data  if post['media_source']  == 'nsfw'])
+			total_medias = sum([post['media_count'] for post in posts])
+			total_sfw_images = sum([post['media_count'] for post in posts  if post['media_source']  == 'sfw'])
+			total_nsfw_images = sum([post['media_count'] for post in posts  if post['media_source']  == 'nsfw'])
 
-			success,post_data = Utils.share_medias(post_data,folders[media_type],media_type,total_medias,total_sfw_images,total_nsfw_images)
-			if not success:raise Exception(post_data)
+			success,posts = Utils.share_medias(posts,folders[media_type],media_type,total_medias,total_sfw_images,total_nsfw_images)
+			if not success:raise Exception(posts)
 
 			captions_file = os.path.join(configs_folder,creator['id'],'captions.txt')
 			if not isfile(captions_file):raise Exception(f'Captions file does not exist for {creator_name}')
@@ -426,16 +640,16 @@ class _4BASED:
 					task_id,
 					creator,
 					media_type,
-					day['medias'],
-					day['media_count'],
-					day['caption'],
+					post['medias'],
+					post['media_count'],
+					post['caption'],
 					captions,
-					day['caption_source'],
-					day['run_type'],
-					day['schedule_date'],
-					int(day['price']),
+					post['caption_source'],
+					post['run_type'],
+					post['schedule_date'],
+					int(post['price']),
 					creator['reuse_ip']
-					) for day in post_data]
+					) for post in posts]
 				
 				futures = []
 				for arg in args:
@@ -459,7 +673,9 @@ class _4BASED:
 					if success:
 						completed += 1
 						success,msg = Utils.add_post(admin,result)
-						if not success:raise Exception(result)
+						if not success:raise Exception(msg)
+
+						post_ids.append(result['id'])
 
 						client_msg = {'msg':f'{completed} posts created so far on task:{task_id},{creator_name}','status':'success','type':'message'}
 						success,msg = Utils.update_client(client_msg)
@@ -492,11 +708,11 @@ class _4BASED:
 				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
-			elif completed == len(post_data) and len(post_data) > 0:
+			elif completed == len(posts) and len(posts) > 0:
 				task_status = 'success'
 				client_msg = {'msg':f'{task_id} successful ','status':'success','type':'message'}
 				
-			elif  fails > len(post_data) // 2:
+			elif  fails > len(posts) // 2:
 				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
 				task_status = 'failed'
 				task_msg = client_msg['msg']
@@ -512,13 +728,129 @@ class _4BASED:
 			success,msg = Utils.update_client(client_msg)
 			if not success:Utils.write_log(msg)
 
-			if task_status == 'success':return True,task_status,task_msg
-			return False,task_status,task_msg
+			if task_status == 'success':return True,task_status,task_msg,post_ids
+			return False,task_status,task_msg,post_ids
 
-	def add_creators(self,admin,task,creators):
+	def like_comment(self,task:dict,admin:str,post_id:str,action_count:int,max_workers,action='like-post'):
+		task_status,task_msg,completed,fails,user_engagement_ids,action_ids = 'failed',f'Post {action} started',0,0,{},[]
+		action_lingo = {'like-post':'likes','comment':'comments'}
+		prev_user_ids = {'like-post':'user_like_ids','comment':'user_comment_ids'}
+		try:
+			task_id,main_task_id = task['id'],task['task_id']
+			Utils.write_log(f'=== like started for {task_id} ===')
+
+			success,post = Utils.get_post(post_id)
+			if not success:raise Exception(post)
+
+			user_engagement_ids = json.loads(post.get('user_engagement_ids','[]'))
+
+			success,users,total_users = Utils.get_creators(
+				admin=admin,limit=action_count,
+				exclude_from_posts=user_engagement_ids[prev_user_ids[action]])
+			if not success:raise Exception(users)
+
+
+
+			if action == 'comment':
+				if not isfile(universal_files['comments']):raise Exception(f'comments file does not exist')
+
+				comments = []
+				with open(universal_files['comments'],'r',encoding='utf-8') as f:
+					comments = f.readlines()
+
+				if len(comments) < len(users):raise Exception('Not enough comments for users')
+				for i, user in enumerate(users):user['comment'] = comments[i]
+
+			
+			with ThreadPoolExecutor(max_workers=max_workers) as executor:
+				args = [(admin,user,post['id'],task_id,) for user in users]
+				kwargs = [{'action_count':action_count,'action':action,'comment':user.get('comment','')} for user in users]
+				
+				futures = []
+				for arg, kwarg in zip(args, kwargs):
+					success,task_status = Utils.check_task_status(main_task_id)
+					if not success:raise Exception(task_status)
+					if task_status['status'].lower() in ['cancelled','canceled']:break
+
+					future = executor.submit(Creator().post_actions, *arg, **kwarg)
+					futures.append(future)
+
+				for future in as_completed(futures):
+					success,task_status = Utils.check_task_status(main_task_id)
+					if not success:raise Exception(task_status)
+					
+					if task_status['status'].lower() in ['cancelled','canceled']:
+						for remaining_future in futures:
+							remaining_future.cancel()
+						break
+
+					success,result,action_id = future.result()
+					if success:
+						completed += 1
+						action_ids.append(action_id)
+
+						client_msg = {'msg':f'{completed} {action_lingo[action]} so far on post {post_id} | task:{main_task_id} | engagement {task_id}','status':'success','type':'message'}
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+
+
+					elif not success and result == 'Task canceled':
+						task_status = 'canceled'
+						client_msg = {'msg':f'{result} task:{main_task_id} | post:{post_id} | engagement {task_id}','status':'error','type':'message'}
+						
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+						break
+					
+					else:
+						fails += 1
+						client_msg = {'msg':f'{fails} {action_lingo[action]} failed so far on  post {post_id} | task:{main_task_id} | engagement {task_id}','status':'error','type':'message'}
+
+						success,msg = Utils.update_client(client_msg)
+						if not success:Utils.write_log(msg)
+						task_msg = result
+
+		except Exception as error:
+			Utils.write_log(error)
+			task_status = 'failed'
+			task_msg = f'Error engaging on post {post_id} | task {main_task_id} | engagement {task_id}: {error}'
+
+		finally:
+			if task_status == 'canceled':
+				client_msg = {'msg':f'{main_task_id} was canceled ','status':'error','type':'message'}
+				task_msg = client_msg['msg']
+
+			elif completed == len(users) and len(users) > 0:
+				task_status = 'success'
+				client_msg = {'msg':f'Engagement {task_id} successful ','status':'success','type':'message'}
+				
+			elif  fails > len(users) // 2:
+				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
+				task_status = 'failed'
+				task_msg = client_msg['msg']
+			
+			elif task_status == 'failed':
+				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
+			
+			else:
+				task_status = 'completed'
+				client_msg = {'msg':f'{completed} {action_lingo[action]} successful on post {post_id} | task:{main_task_id} | engagement {task_id}','status':'success','type':'message'}
+				task_msg = client_msg['msg']
+
+			success,msg = Utils.update_client(client_msg)
+			if not success:Utils.write_log(msg)
+			
+			if task_status == 'success':
+				user_engagement_ids[prev_user_ids[action]] += action_ids
+				Utils.update_post(post_id,user_engagement_ids,user_engagement_ids=True)
+				return True,task_status,task_msg
+			return False,task_status,task_msg
+		
+
+	def add_creators(self,admin,task,creators,category):
 		task_status,task_msg,completed,fails = 'failed',f'Post creation started',0,0
 		try:
-			Utils.write_log(f'=== Add creators started for {task["id"]} ===')
+			Utils.write_log(f'=== Add {category} started for {task["id"]} ===')
 			task_id = task['id']
 
 			with ThreadPoolExecutor(max_workers=10) as executor:
@@ -527,7 +859,7 @@ class _4BASED:
 					creator['email'],
 					creator['password']
 					) for creator in creators]
-				kwargs = [{'task_id':task_id} for creator in creators]
+				kwargs = [{'task_id':task_id,'category':category} for creator in creators]
 				
 				futures = []
 				for arg,kwarg in zip(args,kwargs):
@@ -551,7 +883,7 @@ class _4BASED:
 					if success:
 						completed += 1
 
-						client_msg = {'msg':f'{completed} creators added so far on task:{task_id}','status':'success','type':'message'}
+						client_msg = {'msg':f'{completed} {category} added so far on task:{task_id}','status':'success','type':'message'}
 						success,msg = Utils.update_client(client_msg)
 						if not success:Utils.write_log(msg)
 
@@ -682,3 +1014,4 @@ class _4BASED:
 
 		except Exception as error:
 			return False,error
+		

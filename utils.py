@@ -101,6 +101,7 @@ class Utils:
 			return f"Mozilla/5.0 (Linux; Android {Utils.generate_android_version()}; {Utils.generate_android_device()}) AppleWebKit/537.36 (KHTML, like Gecko) {browser['name']}/{browser['version']} Mobile Safari/537.36"
 		else:
 			return UserAgent(use_external_data=True)
+	
 	@staticmethod
 	def create_tables():
 		success,msg = False,''
@@ -123,16 +124,20 @@ class Utils:
 				  	email TEXT,
 					data TEXT,
 				  	admin TEXT,
+				  	category TEXT DEFAULT 'creator',
+				  	task_id TEXT,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
 			
 			cursor.execute('''
 				CREATE TABLE IF NOT EXISTS tasks (
 					id TEXT PRIMARY KEY,
-					status TEXT,
-				  	admin TEXT,
-					action_count,
-					message TEXT,
-				  	type TEXT,
+					status TEXT NOT NULL,
+				  	admin TEXT NOT NULL,
+					action_count NOT NULL,
+					message TEXT NULL,
+				  	type TEXT NOT NULL,
+				  	config TEXT NULL DEFAULT '{}',
+				  	current_day INTEGER NOT NULL DEFAULT 1,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
 			
 			cursor.execute('''
@@ -149,6 +154,19 @@ class Utils:
 				  	caption TEXT,
 				  	admin TEXT,
 				  	media_type TEXT,
+				  	user_engagement_ids TEXT,
+					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
+			
+			cursor.execute(''' CREATE TABLE IF NOT EXISTS engagements (
+					id TEXT PRIMARY KEY,
+				  	task_id TEXT NOT NULL,
+					status TEXT NOT NULL,
+				  	admin TEXT NOT NULL,
+					like_pattern TEXT NOT NULL,
+					comment_pattern TEXT NULL,
+				  	current_day INTEGER NOT NULL,
+				  	message TEXT NULL,
+				  	post_ids TEXT NOT NULL,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
 			
 			conn.commit()
@@ -281,13 +299,15 @@ class Utils:
 
 
 	@staticmethod
-	def add_creator(creator_id,creator_email,creator_data,admin):
+	def add_creator(creator_id,creator_email,creator_data,admin,category='creators',task_id=None):
 		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			cursor.execute("INSERT INTO creators (id, email, data, admin) VALUES (?, ?, ?, ?)", (creator_id,creator_email,json.dumps(creator_data),admin))
-			conn.commit()
+			if len(creator_data.items()) > 0:
+				category = 'creator' if category == 'creators' else 'user'
+				cursor.execute("INSERT INTO creators (id, email, data, admin, category, task_id) VALUES (?, ?, ?, ?, ?, ?)", (creator_id,creator_email,json.dumps(creator_data),admin,category,task_id))
+				conn.commit()
 			
 			success,msg = True, 'Creator added successfully'
 		except Exception as error:
@@ -332,52 +352,128 @@ class Utils:
 			return success,msg   
 		
 	@staticmethod
-	def get_creators(admin='',limit=20, offset=0,multiple=True,creator=None):
+	def get_creators(admin='', limit=20, offset=0, multiple=True, creator=None, category='creator', constraint=None, keyword=None, selected_creators=[], exclude_from_posts=None):
+		"""
+		Fetch creators with various filters and options.
+		
+		Parameters:
+			exclude_from_posts: str (optional) - The column name to exclude creators from (e.g., 'like_user_ids', 'comment_user_ids').
+		"""
 		success, creators, total_creators = False, [], 0
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-
-			if multiple:
-				cursor.execute("SELECT COUNT(*) FROM creators WHERE admin = ?",(admin,))
+			if exclude_from_posts:  # Dynamically exclude creators based on the provided column
+				cursor.execute(
+					f"""
+					SELECT COUNT(*) 
+					FROM creators 
+					WHERE id NOT IN (
+						SELECT DISTINCT {exclude_from_posts}
+						FROM posts
+					) AND admin = ?
+					""",
+					(admin,)
+				)
 				total_creators = cursor.fetchone()[0]
 
-				cursor.execute("SELECT * FROM creators  WHERE admin = ? ORDER BY created_at DESC LIMIT ? OFFSET ?", (admin, limit, offset))
+				cursor.execute(
+					f"""
+					SELECT * 
+					FROM creators 
+					WHERE id NOT IN (
+						SELECT DISTINCT {exclude_from_posts}
+						FROM posts
+					) AND admin = ?
+					ORDER BY created_at DESC 
+					LIMIT ? OFFSET ?
+					""",
+					(admin, limit, offset)
+				)
 				rows = cursor.fetchall()
 
 				creators = [{
 					'id': row[0], 
-					'email':row[1],
+					'email': row[1],
 					'data': json.loads(row[2]),
 					'created_at': row[4]
-					} for row in rows]
-			else:
-				cursor.execute("SELECT * FROM creators WHERE id = ?", (creator,))
-				row = cursor.fetchone()
-				
-				creators = {
+				} for row in rows]
+			elif selected_creators:  # Check if selected_creators is not empty
+				placeholders = ','.join('?' for _ in selected_creators)  # Create placeholders for the IN clause
+				cursor.execute(
+					f"SELECT COUNT(*) FROM creators WHERE id IN ({placeholders}) AND admin = ?",
+					(*selected_creators, admin)
+				)
+				total_creators = cursor.fetchone()[0]
+
+				cursor.execute(
+					f"""SELECT * FROM creators 
+					WHERE id IN ({placeholders}) AND admin = ? 
+					ORDER BY created_at DESC 
+					LIMIT ? OFFSET ?""",
+					(*selected_creators, admin, limit, offset)
+				)
+				rows = cursor.fetchall()
+
+				creators = [{
 					'id': row[0], 
-					'email':row[1],
+					'email': row[1],
 					'data': json.loads(row[2]),
 					'created_at': row[4]
-				} if row is not None else {}
-				
+				} for row in rows]
+			else:
+				# Fallback to the original logic if no selected_creators
+
+				if multiple:
+					category = {'users':'user','creators':'creator','creator':'creator'}[category]
+					cursor.execute(
+						"SELECT COUNT(*) FROM creators WHERE admin = ? AND category = ?",
+						(admin, category)
+					)
+					total_creators = cursor.fetchone()[0]
+
+					cursor.execute(
+						"SELECT * FROM creators WHERE admin = ? AND category = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+						(admin, category, limit, offset)
+					)
+					rows = cursor.fetchall()
+
+					creators = [{
+						'id': row[0], 
+						'email': row[1],
+						'data': json.loads(row[2]),
+						'created_at': row[4]
+					} for row in rows]
+				else:
+					cursor.execute("SELECT * FROM creators WHERE id = ?", (creator,))
+					row = cursor.fetchone()
+
+					creators = {
+						'id': row[0], 
+						'email': row[1],
+						'data': json.loads(row[2]),
+						'created_at': row[4]
+					} if row is not None else {}
+
 			success = True
 		except Exception as error:
-			success, creators = False, f'Error getting creators:{error}'
-
+			success, creators = False, f'Error getting creators: {error}'
 		finally:
 			conn.close()
 			return success, creators, total_creators
+
+
 		
 	@staticmethod
 	def check_creator(creator_email,admin):
+		print(creator_email,admin)
 		success, creator = False,{}
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
 			cursor.execute("SELECT * FROM creators WHERE email = ? AND admin = ?", (creator_email,admin))
 			row = cursor.fetchone()
+			print(row)
 			creator = {
 				'id': row[0], 
 				'email':row[1],
@@ -394,7 +490,7 @@ class Utils:
 			return success, creator
 
 	@staticmethod
-	def add_task(task_id, task):
+	def add_task(task_id, task:dict):
 		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
@@ -405,10 +501,11 @@ class Utils:
 			action_count = task['action_count']
 			message = task['message']
 			task_type = task['type']
+			config = json.dumps(task.get('config',{}))
 
 			
-			cursor.execute("INSERT INTO tasks (id, status, admin, action_count, message, type) VALUES (?, ?, ?, ?, ?, ?)", 
-						   (task_id, status, admin, action_count, message, task_type))
+			cursor.execute("INSERT INTO tasks (id, status, admin, action_count, message, type, config) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+						   (task_id, status, admin, action_count, message, task_type, config))
 			conn.commit()
 			
 			success,msg = True, 'Task added successfully'
@@ -442,20 +539,24 @@ class Utils:
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			status,message = task['status'], task['message']
+			current_day = task.get('current_day',None)
+			if current_day:
+				cursor.execute("UPDATE tasks SET current_day = ? WHERE id = ?", (current_day,task_id))
+			else:
+				status,message = task['status'], task['message']
+				cursor.execute("UPDATE tasks SET status = ?, message = ? WHERE id = ?", (status,message,task_id))
 			
-			cursor.execute("UPDATE tasks SET status = ?, message = ? WHERE id = ?", (status,message,task_id))
 			conn.commit()
 			
 			success,msg = True, 'Task updated successfully'
 		except Exception as error:
-			success,msg = False, str(error)
+			success,msg = False, f'Error updating task {task_id} : {error}'
 		finally:
 			conn.close() 
 			return success,msg   
 
 	@staticmethod
-	def check_task_status(task_id):
+	def get_task(task_id):
 		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
@@ -475,7 +576,8 @@ class Utils:
 				'action_count':row[3],
 				'message':row[4],
 				'type':row[5],
-				'created_at': row[6]}
+				'config':row[6],
+				'created_at': row[7]}
 
 			else:success,msg = False,f'Could not get task {task_id}'
 		
@@ -484,8 +586,12 @@ class Utils:
 		
 		finally:
 			conn.close()
-			return success,msg
-		
+			return success,msg 
+
+	@staticmethod
+	def check_task_status(task_id):
+		return Utils.get_task(task_id)
+	
 	@staticmethod
 	def get_tasks(admin='', limit=20, offset=0):
 		success, tasks, total_tasks = True, [], 0
@@ -506,7 +612,8 @@ class Utils:
 				'action_count':row[3],
 				'message':row[4],
 				'type':row[5],
-				'created_at': row[6]} for row in rows]
+				'config':row[6],
+				'created_at': row[7]} for row in rows]
 
 		except Exception as error:
 			success, tasks = False, str(error)
@@ -532,6 +639,7 @@ class Utils:
 			price = post['price']
 			caption = post['caption']
 			media_type = post['media_type']
+			user_engagement_ids = json.dumps(post.get('user_engagement_ids',{'like_user_ids':[],'comment_user_ids':[]}))
 
 
 			cursor.execute(
@@ -541,11 +649,11 @@ class Utils:
 				posted_medias, 
 				post_link, task_id,
 				type,schedule_date,
-				price,caption,admin,media_type) 
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+				price,caption,admin,media_type,user_engagement_ids) 
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
 				(post_id, creator, creator_username, 
 					posted_medias, post_link, 
-					task_id,post_type,schedule_date,price,caption,admin,media_type))
+					task_id,post_type,schedule_date,price,caption,admin,media_type,user_engagement_ids))
 			conn.commit()
 			
 			success,msg = True, 'Post added successfully'
@@ -575,22 +683,31 @@ class Utils:
 			return success,msg 
 
 	@staticmethod
-	def update_post(post_id, post):
+	def update_post(post_id, post, user_engagement_ids=False):
 		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			schedule_date = post['schedule_date']
-			price = post['price']
-			caption = post['caption']
 
-			
-			cursor.execute(
-				"""UPDATE posts 
-				SET schedule_date = ?,
-				price = ?,
-				caption = ? 
-				WHERE id = ?""", (schedule_date,price,caption,post_id))
+			if not user_engagement_ids:
+				schedule_date = post['schedule_date']
+				price = post['price']
+				caption = post['caption']
+				
+				cursor.execute(
+					"""UPDATE posts 
+					SET schedule_date = ?,
+					price = ?,
+					caption = ? 
+					user_engagement_ids = ?
+					WHERE id = ?""", (schedule_date,price,caption,user_engagement_ids,post_id))
+			else:
+				user_engagement_ids = json.dumps(post['user_engagement_ids'],{'like_user_ids':[],'comment_user_ids':[]})
+				
+				cursor.execute(
+					"""UPDATE posts 
+					SET user_engagement_ids = ?,
+					WHERE id = ?""", (user_engagement_ids,post_id))
 			conn.commit()
 			
 			success,msg = True, 'posts updated successfully'
@@ -635,7 +752,8 @@ class Utils:
 				'caption':row[9],
 				'admin':row[10],
 				'media_type':row[11],
-				'created_at':row[12]
+				'user_engagement_ids':row[12],
+				'created_at':row[13]
 				} for row in rows]
 		except Exception as error:
 			success, posts = False, str(error)
@@ -643,6 +761,172 @@ class Utils:
 		finally:
 			conn.close()
 			return success, posts, total_posts
+		
+	@staticmethod
+	def get_post(post):
+		success, msg = False, ''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+			cursor.execute("SELECT * FROM posts WHERE id = ? ", (post))
+			row = cursor.fetchall()
+
+			if not row: raise Exception(f'Post {post} not found')
+			row = row[0]
+			success,msg = True,{
+				'id': row[0], 
+				'creator': row[1], 
+				'creator_username': row[2], 
+				'posted_medias': row[3], 
+				'post_link':row[4],
+				'task_id': row[5],
+				'type':row[6],
+				'schedule_date':row[7],
+				'price':row[8],
+				'caption':row[9],
+				'admin':row[10],
+				'media_type':row[11],
+				'user_engagement_ids':row[12],
+				'created_at':row[13]
+				}
+			
+		except Exception as error:
+			success, msg = False, str(error)
+
+		finally:
+			conn.close()
+			return success, msg
+		
+	@staticmethod
+	def add_engagement(engagement_id, engagement:dict):
+		success,msg = False,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		
+		try:
+			admin = engagement['admin']
+			status = engagement['status']
+			task_id = engagement['task_id']
+			like_pattern = json.dumps(engagement['like_pattern'])
+			comment_pattern = json.dumps(engagement['comment_pattern'])
+			current_day = engagement['current_day']
+			message = engagement['message']
+			post_ids = json.dumps(engagement['post_ids'])
+
+			
+			cursor.execute("INSERT INTO engagements (id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+						   (engagement_id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids))
+			conn.commit()
+			
+			success,msg = True, 'Engagement added successfully'
+		except Exception as error:
+			success,msg =  False, f'Error adding engagement {engagement_id} | {error}'
+		finally:
+			conn.close()
+			return success,msg
+
+	@staticmethod
+	def delete_engagement(engagement_id):
+		success,msg = False,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+
+			cursor.execute('DELETE FROM engagements WHERE id = ?', (engagement_id,))
+			conn.commit()
+
+			success,msg =  True,'Engagement deleted successfully'
+
+		except Exception as error:
+			success,msg = False,str(error)
+		finally:
+			conn.close()
+			return success,msg
+
+	@staticmethod
+	def update_engagement(engagement_id, engagement):
+		success,msg = False,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+			status,current_day,message = engagement['status'], engagement['current_day'],engagement['message']
+			
+			cursor.execute("UPDATE engagements SET status = ?, current_day = ? message = ? WHERE id = ?", (status,current_day,message,engagement_id))
+			conn.commit()
+			
+			success,msg = True, 'Engagement updated successfully'
+		except Exception as error:
+			success,msg = False, f'Error updating engagement | {error}'
+		finally:
+			conn.close() 
+			return success,msg   
+
+	@staticmethod
+	def get_engagement(engagement_id):
+		success,msg = False,''
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+
+			cursor.execute("SELECT * FROM engagements WHERE id = ?", (engagement_id,))
+			row = cursor.fetchall()
+
+			if not row:raise Exception(f'Engagement {engagement_id} not found')
+
+			row = row[0]
+
+			if row:success,msg = True,{
+				'id': row[0],
+				'task_id':row[1] ,
+				'status': row[2], 
+				'admin':row[3],
+				'like_pattern':row[4],
+				'comment_pattern':row[5],
+				'current_day':row[6],
+				'message':row[7],
+				'post_ids':row[8],
+				'created_at': row[9]}
+
+			else:success,msg = False,f'Could not get engagement {engagement_id}'
+		
+		except Exception as error:
+			success,msg = False, f'Error getting engagement | {error}'
+		
+		finally:
+			conn.close()
+			return success,msg 
+	
+	@staticmethod
+	def get_engagements(admin='', limit=20, offset=0):
+		success, engagements, total_engagements = True, [], 0
+		conn = sqlite3.connect(db_file)
+		cursor = conn.cursor()
+		try:
+
+			cursor.execute("SELECT COUNT(*) FROM engagements WHERE admin = ?", (admin,))
+			total_engagements = cursor.fetchone()[0]
+
+			cursor.execute("SELECT * FROM engagements WHERE admin = ? ORDER BY created_at DESC LIMIT ? OFFSET ?", (admin, limit, offset))
+			rows = cursor.fetchall()
+
+			engagements = [{
+				'id': row[0],
+				'task_id':row[1] ,
+				'status': row[2], 
+				'admin':row[3],
+				'like_pattern':row[4],
+				'comment_pattern':row[5],
+				'current_day':row[6],
+				'message':row[7],
+				'post_ids':row[8],
+				'created_at': row[9]} for row in rows]
+
+		except Exception as error:
+			success, engagements = False, str(error)
+
+		finally:
+			conn.close()
+			return success, engagements, total_engagements
 		
 	@staticmethod
 	def time_diff(timestamp):
@@ -709,7 +993,6 @@ class Utils:
 		try:
 			success,medias = Utils.get_medias(folder,media_type=media_type)
 			if not success:raise Exception(medias)
-
 
 			sfw_medias = [os.path.join(folder,media) for media in medias if media.startswith(f'sfw-')][:total_sfw_medias]
 			nsfw_medias = [os.path.join(folder,media) for media in medias if media.startswith(f'nsfw-')][:total_nsfw_medias]
@@ -779,6 +1062,34 @@ class Utils:
 			return False,f'Error reading bytes {error}'
 		
 	@staticmethod
+	def move_posted_media(media_path: str):
+		try:
+			if not os.path.exists(media_path):
+				return f"Error: File {media_path} does not exist."
+
+			path_parts = media_path.split(os.sep)
+
+			try:
+				user_id = path_parts[-3] 
+				media_type = path_parts[-2] 
+				main_path = '/'.join(path_parts[:-3])
+			
+			except IndexError:raise Exception("Error: Path structure is incorrect.")
+
+			target_dir = os.path.join(main_path, user_id, f"used_{media_type}")
+			os.makedirs(target_dir, exist_ok=True)
+
+			filename = os.path.basename(media_path)
+			destination_path = os.path.join(target_dir, filename)
+
+			shutil.move(media_path, destination_path)
+
+			return True,f"File moved to: {destination_path}"
+		
+		except Exception as error:
+			return False,error
+		
+	@staticmethod
 	def update_client(client_msg):
 		try:
 			response = requests.post(f'{host}/update-client',json=client_msg)
@@ -787,7 +1098,7 @@ class Utils:
 			return True,update['msg']
 		except Exception as error:
 			return False,error
-		
+
 	@staticmethod
 	def check_values(values:list):
 		for value in values:

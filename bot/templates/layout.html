@@ -56,6 +56,11 @@
                             <i class="fas fa-user"></i> Creators
                         </a>
                     </li>
+                    <li class="{%if g.page == 'users'%} active {%endif%}">
+                        <a href="/creators?category=users">
+                            <i class="fas fa-user"></i> users
+                        </a>
+                    </li>
                     <li class="{%if g.page in ['admins','edit-admin']%} active {%endif%}">
                         <a href="/admins">
                             <i class="fas fa-user"></i> Admins

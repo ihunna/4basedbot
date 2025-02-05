@@ -56,20 +56,36 @@ Configs
                                 Captions
                             </a>
                         </li>
+                        <li class="{%if tab=='comments'%} active {%endif%}">
+                            <a href="/configs?tab=comments&creator={{creator}}">
+                                Comments
+                            </a>
+                        </li>
                         <li class="{%if tab=='images'%} active {%endif%}">
                             <a href="/configs?tab=images&creator={{creator}}">
                                 Images
                             </a>
                         </li>
+                        <li class="{%if tab=='used_images'%} active {%endif%}">
+                            <a href="/configs?tab=used_images&creator={{creator}}">
+                                Used images
+                            </a>
+                        </li>
+                      
                         <li class="{%if tab=='videos'%} active {%endif%}">
                             <a href="/configs?tab=videos&creator={{creator}}">
                                 Videos
                             </a>
                         </li>
-                        {%if tab != 'captions'%}
+                        <li class="{%if tab=='used_videos'%} active {%endif%}">
+                            <a href="/configs?tab=used_videos&creator={{creator}}">
+                                Used videos
+                            </a>
+                        </li>
+                        {%if tab not in ['captions','comments']%}
                             <li class="upload-{{tab}}">
-                                <a href="/configs?creator={{creator}}&tab=upload-{{_tab}}">
-                                    Upload {{_tab}}
+                                <a href="/configs?creator={{creator}}&tab=upload-{{_tab|replace('used_','')}}">
+                                    Upload {{_tab|replace('used_','')}}
                                 </a>
                             </li>
                         {%endif%}
@@ -89,15 +105,22 @@ Configs
                             Captions
                         </a>
                     </li>
-                    <li class="{%if category=='creators'%} active {%endif%}">
-                        <a href="/files/creators">
-                            Add creators
+                    <li class="{%if category=='comments'%} active {%endif%}">
+                        <a href="/files/comments">
+                            Comments
                         </a>
                     </li>
+                    {%if category in ['creators','users']%}
+                        <li class="active">
+                            <a href="/files/{{category}}">
+                                Add {{category}}
+                            </a>
+                        </li>
+                    {%endif%}
                 </ul>
             </div>
         {%endif%}
-        {%if tab in ['images','videos']%}
+        {%if tab in ['images','videos', 'used_images', 'used_videos']%}
             <div class="table-actions">
                 <ul class="select-items">
                     <li class="select all">
@@ -145,7 +168,7 @@ Configs
                                     </li>
                                 </ul>
                             </div>
-                            {%if tab == 'images'%}
+                            {%if tab in ['images','used_images']%}
                                 <img src="/media/{{creator}}/{{tab}}/{{media}}" alt="{{media}}">
                             {%else%}
                                 <video src="/media/{{creator}}/{{tab}}/{{media}}"></video>
@@ -183,7 +206,7 @@ Configs
             </div>
         {%elif tab == 'files'%}
             <div class="configs-container">
-                {%if category in ['proxies','captions']%}
+                {%if category in ['proxies','captions','comments']%}
                     <form action="" id="configs-form" data-action="update" 
                         data-action-message="Updating file"
                         data-action-category="{{category}}",
@@ -193,17 +216,25 @@ Configs
                         {%else%}
                             <textarea class="scroll scroll-v" name="configs" placeholder="Type your {{category}} here seperated by single newline (enter key)... &#13;&#10;{{category}} are universal"></textarea>
                         {%endif%}
+                        <label for="file-input" class="file-label">Import from file:</label>
+                        <input type="file" id="file-input" accept=".txt, .csv">
+                        <br>
                         <input type="submit" value="Update">
                     </form>
                 {%else%}
                     <form action="" id="configs-form" data-action="create" 
-                        data-action-message="Adding creators"
-                        data-action-category="{{category}}",
+                        data-action-message="Adding {{category}}"
+                        data-action-category="{{category}}"
                         data-action-url="/creators/add"
                         data-action-next-url="/tasks">
-                        
-                        <textarea class="scroll scroll-v" name="configs" placeholder="Type email:password here seperated by single newline (enter key)... &#13;&#10;{{category}} are universal" required></textarea>
-                        <input type="submit" value="Add creators">
+                    
+                        <textarea class="scroll scroll-v" name="configs" id="configs-textarea" 
+                            placeholder="Type email:password here separated by single newline (enter key)...&#13;&#10;{{category}} are universal" required></textarea>
+                        <input type="hidden" value="{{category}}" name="category">
+                        <label for="file-input" class="file-label">Import from file:</label>
+                        <input type="file" id="file-input" accept=".txt, .csv">
+                        <br>
+                        <input type="submit" value="Add {{category}}">
                     </form>
                 {%endif%}
             </div>
@@ -214,6 +245,25 @@ Configs
                 <h3 class="upload-medias-info">
                     Click on either {{_tab}} categories to upload the corresponding {{_tab}}
                 </h3>
+            </div>
+
+        {%elif tab == 'comments'%}
+            <div class="configs-container">
+                <form action="" id="configs-form"
+                    data-action="update" 
+                    data-action-message="Comments update"
+                    data-action-category="comments"
+                    data-action-url="/config/comments/update/{{creator}}">
+                    {%if comments and comments|length > 0%}
+                        <textarea class="scroll scroll-v" name="configs" >{%for comment in comments%}{{comment}}{%endfor%}</textarea>
+                    {%else%}
+                        <textarea class="scroll scroll-v" name="configs" placeholder="Type your comments here seperated by double newline (enter key)..."></textarea>
+                    {%endif%}
+                        <label for="file-input" class="file-label">Import from file:</label>
+                        <input type="file" id="file-input" accept=".txt, .csv">
+                        <br>
+                        <input type="submit" value="Update">
+                </form>
             </div>
 
         {%else%}
@@ -228,6 +278,9 @@ Configs
                     {%else%}
                         <textarea class="scroll scroll-v" name="configs" placeholder="Type your captions here seperated by double newline (enter key)..."></textarea>
                     {%endif%}
+                        <label for="file-input" class="file-label">Import from file:</label>
+                        <input type="file" id="file-input" accept=".txt, .csv">
+                        <br>
                         <input type="submit" value="Update">
                 </form>
             </div>
@@ -258,5 +311,42 @@ Configs
                 padding: 20px;
             }
         </style>
+        <script>
+            document.getElementById('file-input').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        const textarea = document.getElementsByName('configs')[0];
+                        const formated_content = content.replace(/\r\n|\r|\n/g, '\n');
+
+                        const lines = formated_content.split('\n'); // Split content by newlines
+                        let formattedLines;
+
+                        
+                        if (file.name.endsWith('.csv')) {
+                            // Process CSV: Skip the header
+                            formattedLines = lines
+                                .slice(1) // Skip the first line (header)
+                                .map(line => {
+                                    const parts = line.split(','); // Split by colon
+                                    if (parts.length === 3) {
+                                        return `${parts[1]}:${parts[2]}`; // Extract email:password
+                                    }
+                                    return null; // Ignore lines that don't match the pattern
+                                })
+                                .filter(line => line); // Remove null values
+                        } else {
+                            // Process other files without skipping the header
+                            formattedLines = lines.map(line => line.trim()).filter(line => line); // Keep non-empty lines
+                        }
+        
+                        textarea.value = formattedLines.join('\n'); // Join with newlines
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        </script>
     </section>
 {%endblock%}

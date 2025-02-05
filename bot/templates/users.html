@@ -7,8 +7,8 @@
         <div class="configs-nav scroll scroll-h">
             <ul>
                 <li>
-                    <a href="/files/creators">
-                        Add creators
+                    <a href="/files/users">
+                        Add users
                     </a>
                 </li>
             </ul>
@@ -98,11 +98,11 @@
                         <div class="bottom-nav">
                             <div class="sum-total">{{ current_page}} / {{total_creators}}</div>
                             <div class="more-less">
-                                <a href="{{ url_for('creators', page=prev_page) | safe}}">
+                                <a href="{{ url_for('creators', page=prev_page, category='users') | safe}}">
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
                                 &nbsp; &nbsp;
-                                <a href="{{ url_for('creators', page=next_page) | safe}}">
+                                <a href="{{ url_for('creators', page=next_page, category='users') | safe}}">
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
                             </div>
