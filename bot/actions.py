@@ -254,6 +254,11 @@ class Creator:
 		user_id = None
 		try:
 
+			success,post = Utils.get_post(post_id)
+			if not success:raise Exception(post)
+
+			if int(post['price']) > 0:return True,'priced post',user_id
+
 			username = user['data']['details']['user']['name']
 			user_email = user['data']['details']['user']['identifier']
 			user_password = user['data']['details']['user']['password']
@@ -318,6 +323,8 @@ class Creator:
 				return True, f'{post_id} post liked successfully by {username}',user_id
 			
 			elif action == 'like-comment':
+				print(f'comment : {comment}')
+				comment = user.get('comment',None)
 
 				response = session.get(
 					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
@@ -348,6 +355,9 @@ class Creator:
 				return True, f'Post liked and comment posted on {post_id} successfully by {username}',user_id
 			
 			elif action == 'comment':
+				comment = user.get('comment',None)
+				Utils.write_log(f'comment : {comment}')
+				if comment is None:raise Exception(f'No comment on {post_id}')
 				response = session.get(
 					f'https://rest.4based.com/api/1.0/file-stack/{post_id}/view',
 				)
@@ -366,7 +376,7 @@ class Creator:
 				return True, f'comment posted on {post_id} successfully by {username}',user_id
 			
 		except Exception as error:
-			return False,error,user_id
+			return False,f'Error {action} on post {post_id} | {error}',user_id
 		
 
 class _4BASED:
@@ -500,13 +510,14 @@ class _4BASED:
 
 	def start_like_comment(self,task:dict,admin:str,action_count:int,max_workers:int,action:str='like-post'):
 		posts,task_status,task_msg,completed,fails = [],'failed',f'Post creation started',0,0
+		action_lingo = {'like-post':'liking','comment':'commenting'}
 		try:
-			Utils.write_log(f'=== Getting posts on tasks {task_id } ===')
+			task_id, main_task_id = task['id'],task['task_id']
+			print('.....I am here ')
+			Utils.write_log(f'=== {action_lingo[action].capitalize()} posts on tasks {main_task_id } | engagement {task_id} ===')
 
-			action_lingo = {'like-post':'liking','comment':'commenting'}
 			
-			task_id = task['id']
-			client_msg = {'msg':f'Getting all posts before {action_lingo[action]} on {task_id}','status':'success','type':'message'}
+			client_msg = {'msg':f'{action_lingo[action].capitalize()} posts on tasks {main_task_id } | engagement {task_id}','status':'success','type':'message'}
 			success,msg = Utils.update_client(client_msg)
 			if not success:Utils.write_log(msg)
 
@@ -521,15 +532,16 @@ class _4BASED:
 			# 		if not success:raise Exception(msg)
 			# 		posts += msg
 
-			posts = task['posts']
+			posts = json.loads(task['post_ids'])
+			print(posts)
 
 			with ThreadPoolExecutor(max_workers=max_workers) as executor:
-				args = [(task,admin,post,action_count) for post in posts] 
-				kwargs = [{'action':action,'action_count':action_count} for post in posts]
+				args = [(task,admin,post,action_count,max_workers) for post in posts] 
+				kwargs = [{'action':action} for post in posts]
 
 				futures = []
 				for arg, kwarg in zip (args,kwargs):
-					success,task_status = Utils.check_task_status(task_id)
+					success,task_status = Utils.check_task_status(main_task_id)
 					if not success:raise Exception(task_status)
 					if task_status['status'].lower() in ['cancelled','canceled']:break
 
@@ -537,7 +549,7 @@ class _4BASED:
 					futures.append(future)
 
 				for future in as_completed(futures):
-					success,task_status = Utils.check_task_status(task_id)
+					success,task_status = Utils.check_task_status(main_task_id)
 					if not success:raise Exception(task_status)
 
 					if task_status['status'].lower() in ['cancelled','canceled']:
@@ -574,31 +586,31 @@ class _4BASED:
 		except Exception as error:
 			Utils.write_log(error)
 			task_status = 'failed'
-			task_msg = f'Error starting posts on {task_id} : {error}'
+			task_msg = f'Error {action_lingo[action]} posts on task {task_id} | engagement {task_id} : {error}'
 		
 		finally:
 			if task_status == 'canceled':
-				client_msg = {'msg':f'{task_id} was canceled ','status':'error','type':'message'}
+				client_msg = {'msg':f'{main_task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
 
 			elif completed == len(posts) and len(posts) > 0:
 				task_status = 'success'
-				client_msg = {'msg':f'Posting successful on task {task_id}','status':'success','type':'message'}
+				client_msg = {'msg':f'{action_lingo[action].capitalize()} successful on task {main_task_id} | engagement {task_id}','status':'success','type':'message'}
 				
 			elif  fails > len(posts) // 2:
-				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
+				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
 				task_status = 'failed'
 				task_msg = client_msg['msg']
 			
 			elif task_status == 'failed':
-				client_msg = {'msg':f'{task_id} failed ','status':'error','type':'message'}
+				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
 			
 			else:
 				task_status = 'completed'
-				client_msg = {'msg':f'{completed} posts successful task:{task_id}','status':'success','type':'message'}
+				client_msg = {'msg':f'{completed} successful engagement:{task_id}','status':'success','type':'message'}
 				task_msg = client_msg['msg']
 			if task_status not in ['success','completed']:return False,task_status,task_msg,client_msg
-			return True,task_status,task_msg,client_msg,completed,fails
+			return True,task_status,task_msg,client_msg
 		
 		
 	def post(self,task:dict,admin:str,creator:dict,posts:list,media_type:str,max_workers):
@@ -731,13 +743,14 @@ class _4BASED:
 			if task_status == 'success':return True,task_status,task_msg,post_ids
 			return False,task_status,task_msg,post_ids
 
-	def like_comment(self,task:dict,admin:str,post_id:str,action_count:int,max_workers,action='like-post'):
-		task_status,task_msg,completed,fails,user_engagement_ids,action_ids = 'failed',f'Post {action} started',0,0,{},[]
+	def like_comment(self,task:dict,admin:str,post_id:str,action_count:int,max_workers:int,action='like-post'):
+		task_status,task_msg,completed,fails,user_engagement_ids,action_ids,users = 'failed',f'Post {action} started',0,0,{},[],[]
 		action_lingo = {'like-post':'likes','comment':'comments'}
-		prev_user_ids = {'like-post':'user_like_ids','comment':'user_comment_ids'}
+		prev_user_ids = {'like-post':'like_user_ids','comment':'comment_user_ids'}
 		try:
 			task_id,main_task_id = task['id'],task['task_id']
-			Utils.write_log(f'=== like started for {task_id} ===')
+			Utils.write_log(f'=== {action_lingo[action]} started for {task_id} ===')
+			Utils.write_log(action_count)
 
 			success,post = Utils.get_post(post_id)
 			if not success:raise Exception(post)
@@ -746,10 +759,8 @@ class _4BASED:
 
 			success,users,total_users = Utils.get_creators(
 				admin=admin,limit=action_count,
-				exclude_from_posts=user_engagement_ids[prev_user_ids[action]])
+				exclude_from_posts=user_engagement_ids[prev_user_ids[action]],category='users')
 			if not success:raise Exception(users)
-
-
 
 			if action == 'comment':
 				if not isfile(universal_files['comments']):raise Exception(f'comments file does not exist')
@@ -761,10 +772,12 @@ class _4BASED:
 				if len(comments) < len(users):raise Exception('Not enough comments for users')
 				for i, user in enumerate(users):user['comment'] = comments[i]
 
+			Utils.write_log(f'Users: {users}')
+
 			
 			with ThreadPoolExecutor(max_workers=max_workers) as executor:
-				args = [(admin,user,post['id'],task_id,) for user in users]
-				kwargs = [{'action_count':action_count,'action':action,'comment':user.get('comment','')} for user in users]
+				args = [(admin,user,post['id'],main_task_id,) for user in users]
+				kwargs = [{'action':action} for user in users]
 				
 				futures = []
 				for arg, kwarg in zip(args, kwargs):
@@ -787,9 +800,9 @@ class _4BASED:
 					success,result,action_id = future.result()
 					if success:
 						completed += 1
-						action_ids.append(action_id)
+						if result != 'priced post':action_ids.append(action_id)
 
-						client_msg = {'msg':f'{completed} {action_lingo[action]} so far on post {post_id} | task:{main_task_id} | engagement {task_id}','status':'success','type':'message'}
+						client_msg = {'msg':f'{completed} {action_lingo[action]} completed so far on post {post_id} | task:{main_task_id} | engagement {task_id}','status':'success','type':'message'}
 						success,msg = Utils.update_client(client_msg)
 						if not success:Utils.write_log(msg)
 
@@ -803,6 +816,7 @@ class _4BASED:
 						break
 					
 					else:
+						Utils.write_log(result)
 						fails += 1
 						client_msg = {'msg':f'{fails} {action_lingo[action]} failed so far on  post {post_id} | task:{main_task_id} | engagement {task_id}','status':'error','type':'message'}
 
@@ -810,12 +824,17 @@ class _4BASED:
 						if not success:Utils.write_log(msg)
 						task_msg = result
 
+			user_engagement_ids[prev_user_ids[action]] += action_ids
+			success,msg = Utils.update_post(post_id,{},user_engagement_ids=user_engagement_ids)
+			if not success:raise Exception(msg)
+
 		except Exception as error:
 			Utils.write_log(error)
 			task_status = 'failed'
 			task_msg = f'Error engaging on post {post_id} | task {main_task_id} | engagement {task_id}: {error}'
 
 		finally:
+
 			if task_status == 'canceled':
 				client_msg = {'msg':f'{main_task_id} was canceled ','status':'error','type':'message'}
 				task_msg = client_msg['msg']
@@ -823,6 +842,7 @@ class _4BASED:
 			elif completed == len(users) and len(users) > 0:
 				task_status = 'success'
 				client_msg = {'msg':f'Engagement {task_id} successful ','status':'success','type':'message'}
+				task_msg = client_msg['msg']
 				
 			elif  fails > len(users) // 2:
 				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
@@ -831,7 +851,7 @@ class _4BASED:
 			
 			elif task_status == 'failed':
 				client_msg = {'msg':f'Engagement {task_id} failed ','status':'error','type':'message'}
-			
+				task_msg = client_msg['msg']
 			else:
 				task_status = 'completed'
 				client_msg = {'msg':f'{completed} {action_lingo[action]} successful on post {post_id} | task:{main_task_id} | engagement {task_id}','status':'success','type':'message'}
@@ -840,10 +860,7 @@ class _4BASED:
 			success,msg = Utils.update_client(client_msg)
 			if not success:Utils.write_log(msg)
 			
-			if task_status == 'success':
-				user_engagement_ids[prev_user_ids[action]] += action_ids
-				Utils.update_post(post_id,user_engagement_ids,user_engagement_ids=True)
-				return True,task_status,task_msg
+			if task_status in ['success','completed']:return True,task_status,task_msg
 			return False,task_status,task_msg
 		
 

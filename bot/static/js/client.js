@@ -46,7 +46,7 @@ const updateClient = (data) => {
                 span.classList.remove('bg-danger','bg-success');
                 span.classList.add('bg-warning');
             }
-            else if (status === 'running' || status === 'completed' || status === 'success'){
+            else if (status === 'running' || status === 'completed' || status === 'success' || status === 'posting'){
                 span.classList.remove('bg-danger','bg-warning');
                 span.classList.add('bg-success');
             }else {

@@ -464,7 +464,8 @@
                         <div class="table-cell">Price</div>
                         <div class="table-cell">Medias</div>
                         <div class="table-cell">Media type</div>
-                        <div class="table-cell double-cell">Schedule date</div>
+                        <div class="table-cell">Likes</div>
+                        <div class="table-cell">Comments</div>
                         <div class="table-cell double-cell">Date</div>
                         <div class="table-cell actions">Actions</div>
                         </div>
@@ -489,7 +490,8 @@
                                     {%set schedule_date = 'None'%}
                                 {%endif%}
                                 <div class="table-cell ">{{ post.media_type|capitalize}}</div>
-                                <div class="table-cell double-cell double-cell">{{schedule_date}}</div>
+                                <div class="table-cell">{{post.like_count}}</div>
+                                <div class="table-cell">{{post.comment_count}}</div>
                                 <div class="table-cell double-cell double-cell">{{post.created_at}}</div>
                                 <div class="table-cell actions">
                                     <ul class="actions-list">

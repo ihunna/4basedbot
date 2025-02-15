@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from configs import *
-from bot.app_configs import host
+from bot.app_configs import host,Thread
 
 
 root_dir = os.path.dirname(__file__)
 db_file = os.path.join(root_dir,'database.db')
+
+TASK_SCHEDULES = {}
 
 
 class Utils:
@@ -167,6 +169,8 @@ class Utils:
 				  	current_day INTEGER NOT NULL,
 				  	message TEXT NULL,
 				  	post_ids TEXT NOT NULL,
+				  	daily_total INTEGER NOT NULL,
+				  	completed_engagements INTEGER NOT NULL,
 					created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )''')
 			
 			conn.commit()
@@ -363,33 +367,30 @@ class Utils:
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			if exclude_from_posts:  # Dynamically exclude creators based on the provided column
-				cursor.execute(
-					f"""
+			category = {'users':'user','creators':'creator','creator':'creator'}[category]
+			
+			if exclude_from_posts is not None:  # Ensure it's not empty
+				placeholders = ','.join('?' * len(exclude_from_posts))  # Create (?, ?, ?) dynamically
+				Utils.write_log(f'Exclude from posts {placeholders}')
+				query = f"""
 					SELECT COUNT(*) 
 					FROM creators 
-					WHERE id NOT IN (
-						SELECT DISTINCT {exclude_from_posts}
-						FROM posts
-					) AND admin = ?
-					""",
-					(admin,)
-				)
+					WHERE id NOT IN ({placeholders}) 
+					AND admin = ? 
+					AND category = ?
+				"""
+				cursor.execute(query, (*exclude_from_posts, admin, category))  # Unpack list into query
 				total_creators = cursor.fetchone()[0]
 
-				cursor.execute(
-					f"""
+				query = f"""
 					SELECT * 
 					FROM creators 
-					WHERE id NOT IN (
-						SELECT DISTINCT {exclude_from_posts}
-						FROM posts
-					) AND admin = ?
+					WHERE id NOT IN ({placeholders}) 
+					AND admin = ? AND category = ?
 					ORDER BY created_at DESC 
 					LIMIT ? OFFSET ?
-					""",
-					(admin, limit, offset)
-				)
+				"""
+				cursor.execute(query, (*exclude_from_posts, admin, category, limit, offset))
 				rows = cursor.fetchall()
 
 				creators = [{
@@ -425,7 +426,6 @@ class Utils:
 				# Fallback to the original logic if no selected_creators
 
 				if multiple:
-					category = {'users':'user','creators':'creator','creator':'creator'}[category]
 					cursor.execute(
 						"SELECT COUNT(*) FROM creators WHERE admin = ? AND category = ?",
 						(admin, category)
@@ -683,13 +683,13 @@ class Utils:
 			return success,msg 
 
 	@staticmethod
-	def update_post(post_id, post, user_engagement_ids=False):
+	def update_post(post_id, post, user_engagement_ids=None):
 		success,msg = False,''
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
 
-			if not user_engagement_ids:
+			if user_engagement_ids is None:
 				schedule_date = post['schedule_date']
 				price = post['price']
 				caption = post['caption']
@@ -698,21 +698,21 @@ class Utils:
 					"""UPDATE posts 
 					SET schedule_date = ?,
 					price = ?,
-					caption = ? 
+					caption = ?, 
 					user_engagement_ids = ?
 					WHERE id = ?""", (schedule_date,price,caption,user_engagement_ids,post_id))
 			else:
-				user_engagement_ids = json.dumps(post['user_engagement_ids'],{'like_user_ids':[],'comment_user_ids':[]})
+				user_engagement_ids = json.dumps(user_engagement_ids)
 				
 				cursor.execute(
 					"""UPDATE posts 
-					SET user_engagement_ids = ?,
+					SET user_engagement_ids = ?
 					WHERE id = ?""", (user_engagement_ids,post_id))
 			conn.commit()
 			
 			success,msg = True, 'posts updated successfully'
 		except Exception as error:
-			success,msg = False, str(error)
+			success,msg = False, f'Error updating post {error}'
 		finally:
 			conn.close() 
 			return success,msg  
@@ -753,11 +753,12 @@ class Utils:
 				'admin':row[10],
 				'media_type':row[11],
 				'user_engagement_ids':row[12],
+				'like_count':len(json.loads(row[12])['like_user_ids']),
+				'comment_count':len(json.loads(row[12])['comment_user_ids']),
 				'created_at':row[13]
 				} for row in rows]
 		except Exception as error:
-			success, posts = False, str(error)
-
+			success, posts = False, f'Error getting posts {error}'
 		finally:
 			conn.close()
 			return success, posts, total_posts
@@ -768,7 +769,7 @@ class Utils:
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
-			cursor.execute("SELECT * FROM posts WHERE id = ? ", (post))
+			cursor.execute("SELECT * FROM posts WHERE id = ? ", (post,))
 			row = cursor.fetchall()
 
 			if not row: raise Exception(f'Post {post} not found')
@@ -787,11 +788,13 @@ class Utils:
 				'admin':row[10],
 				'media_type':row[11],
 				'user_engagement_ids':row[12],
+				'like_count':len(json.loads(row[12])['like_user_ids']),
+				'comment_count':len(json.loads(row[12])['comment_user_ids']),
 				'created_at':row[13]
 				}
 			
 		except Exception as error:
-			success, msg = False, str(error)
+			success, msg = False, f'Error getting post {post} | {error}'
 
 		finally:
 			conn.close()
@@ -812,10 +815,12 @@ class Utils:
 			current_day = engagement['current_day']
 			message = engagement['message']
 			post_ids = json.dumps(engagement['post_ids'])
+			daily_total = engagement['daily_total']
+			completed_engagements = engagement.get('completed_engagements',0)
 
 			
-			cursor.execute("INSERT INTO engagements (id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-						   (engagement_id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids))
+			cursor.execute("INSERT INTO engagements (id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids, daily_total, completed_engagements) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+						   (engagement_id, task_id, status, admin, like_pattern, comment_pattern, current_day, message, post_ids, daily_total, completed_engagements))
 			conn.commit()
 			
 			success,msg = True, 'Engagement added successfully'
@@ -849,9 +854,9 @@ class Utils:
 		conn = sqlite3.connect(db_file)
 		cursor = conn.cursor()
 		try:
+			completed_engagements = engagement.get('completed_engagements',None)
 			status,current_day,message = engagement['status'], engagement['current_day'],engagement['message']
-			
-			cursor.execute("UPDATE engagements SET status = ?, current_day = ? message = ? WHERE id = ?", (status,current_day,message,engagement_id))
+			cursor.execute("UPDATE engagements SET status = ?, current_day = ?, message = ?, completed_engagements = ? WHERE id = ?", (status,current_day,message,completed_engagements,engagement_id))
 			conn.commit()
 			
 			success,msg = True, 'Engagement updated successfully'
@@ -880,12 +885,15 @@ class Utils:
 				'task_id':row[1] ,
 				'status': row[2], 
 				'admin':row[3],
-				'like_pattern':row[4],
-				'comment_pattern':row[5],
+				'like_pattern':json.loads(row[4]),
+				'comment_pattern':json.loads(row[5]),
 				'current_day':row[6],
 				'message':row[7],
 				'post_ids':row[8],
-				'created_at': row[9]}
+				'created_at': row[9],
+				'daily_total':row[10],
+				'completed_engagements':row[11],
+				}
 
 			else:success,msg = False,f'Could not get engagement {engagement_id}'
 		
@@ -914,12 +922,14 @@ class Utils:
 				'task_id':row[1] ,
 				'status': row[2], 
 				'admin':row[3],
-				'like_pattern':row[4],
-				'comment_pattern':row[5],
+				'like_pattern':json.loads(row[4]),
+				'comment_pattern':json.loads(row[5]),
 				'current_day':row[6],
 				'message':row[7],
 				'post_ids':row[8],
-				'created_at': row[9]} for row in rows]
+				'daily_total':row[9],
+				'completed_engagements':row[10],
+				'created_at': row[11]} for row in rows]
 
 		except Exception as error:
 			success, engagements = False, str(error)
@@ -1105,3 +1115,182 @@ class Utils:
 			if value is None or not value or len(value) < 1:
 				return False
 		else:return True
+
+
+
+class Scheduler:
+	@staticmethod
+	def share_engagement_by_24_hours(like_count, comment_count):
+		"""
+		Distributes like and comment actions randomly across 24 hours.
+		Ensures that the first execution (nearest future time) always has at least 1 like.
+		Returns a dictionary where keys are execution times, and values are (likes, comments).
+		"""
+		
+		def distribute_actions(total_count, ensure_first_positive=False):
+			time_slots = {}
+			total_hours = 24
+			remaining = total_count
+			possible_times = [(datetime.now() + timedelta(hours=i)).strftime("%H:%M") for i in range(total_hours)]
+			
+			# Shuffle times to distribute actions randomly
+			random.shuffle(possible_times)
+			
+			for execution_time in possible_times:
+				if remaining <= 0:
+					break
+				
+				# Ensure the first action has at least 1 like if required
+				actions_at_this_time = random.randint(1, min(3, remaining)) if not (ensure_first_positive and not time_slots) else 1
+				remaining -= actions_at_this_time
+				time_slots[execution_time] = actions_at_this_time
+			
+			return time_slots  # Returns {execution_time: count}
+
+		# Generate like and comment schedules
+		likes_schedule = distribute_actions(like_count, ensure_first_positive=True)
+		comments_schedule = distribute_actions(comment_count)
+
+		# Merge both schedules
+		combined_schedule = {}
+		for time in set(likes_schedule.keys()).union(comments_schedule.keys()):
+			combined_schedule[time] = (
+				likes_schedule.get(time, 0),  # Likes at this time
+				comments_schedule.get(time, 0)  # Comments at this time
+			)
+
+		# Ensure the nearest upcoming action has at least 1 like
+		current_time = datetime.now().strftime("%H:%M")
+		upcoming_times = sorted(t for t in combined_schedule.keys() if t > current_time)
+
+		if upcoming_times:
+			first_action_time = upcoming_times[0]
+			likes, comments = combined_schedule[first_action_time]
+			if likes == 0:
+				combined_schedule[first_action_time] = (1, comments)  # Ensure at least 1 like
+
+		return combined_schedule  # Returns {execution_time: (likes, comments)}
+	
+
+	@staticmethod
+	def share_engagement_by_minutes(like_count, comment_count, total_minutes=20):
+		"""
+		Distributes like and comment actions randomly across a given minute range.
+		Ensures that the first execution (nearest future time) always has at least 1 like.
+		Returns a dictionary where keys are execution times, and values are (likes, comments).
+		"""
+		
+		def distribute_actions(total_count, ensure_first_positive=False):
+			time_slots = {}
+			remaining = total_count
+			possible_times = [(datetime.now() + timedelta(minutes=i)).strftime("%H:%M") for i in range(total_minutes)]
+			
+			# Shuffle times to distribute actions randomly
+			random.shuffle(possible_times)
+			
+			for execution_time in possible_times:
+				if remaining <= 0:
+					break
+				
+				# Ensure the first action has at least 1 like if required
+				actions_at_this_time = random.randint(1, min(3, remaining)) if not (ensure_first_positive and not time_slots) else 1
+				remaining -= actions_at_this_time
+				time_slots[execution_time] = actions_at_this_time
+			
+			return time_slots  # Returns {execution_time: count}
+
+		# Generate like and comment schedules
+		likes_schedule = distribute_actions(like_count, ensure_first_positive=True)
+		comments_schedule = distribute_actions(comment_count)
+
+		# Merge both schedules
+		combined_schedule = {}
+		for time in set(likes_schedule.keys()).union(comments_schedule.keys()):
+			combined_schedule[time] = (
+				likes_schedule.get(time, 0),  # Likes at this time
+				comments_schedule.get(time, 0)  # Comments at this time
+			)
+
+		# Ensure the nearest upcoming action has at least 1 like
+		current_time = datetime.now().strftime("%H:%M")
+		upcoming_times = sorted(t for t in combined_schedule.keys() if t > current_time)
+
+		if upcoming_times:
+			first_action_time = upcoming_times[0]
+			likes, comments = combined_schedule[first_action_time]
+			if likes == 0:
+				combined_schedule[first_action_time] = (1, comments)  # Ensure at least 1 like
+
+		return combined_schedule  # Returns {execution_time: (likes, comments)}
+		
+	@staticmethod
+	def schedule_task(task_id, schedule_time):
+		from bot.start_tasks import start
+		"""
+		Schedule a task to run daily at a specific time.
+		"""
+		def run_task():
+			print(f"Running scheduled task {task_id}...")
+			start(task_id)
+
+		try:
+			# Schedule the task
+			result = schedule.every().day.at(schedule_time).do(run_task)
+			TASK_SCHEDULES[task_id] = schedule_time
+			print(f"Task {task_id} scheduled at {schedule_time} | scheduler data {result}.")
+			return True, f"Task scheduled successfully | scheduler data {result}"
+		except Exception as e:
+			return False, f"Error scheduling task: {e}"
+		
+	@staticmethod
+	def schedule_engagements(engagement):
+		from bot.start_tasks import engage
+		"""
+		Schedules both likes and comments at the same execution time, ensuring they run together.
+		"""
+
+		total_schedules = 0
+
+		try:
+			task_id,engagement_id = engagement['task_id'],engagement['id']
+			current_day = engagement["current_day"]
+			like_count = engagement["like_pattern"].get(f'{current_day}', 0)
+			comment_count = engagement["comment_pattern"].get(f'{current_day}', 0)
+
+			if like_count > 0 or comment_count > 0:
+				schedules = Scheduler.share_engagement_by_minutes(like_count, comment_count)
+
+				results,exec_times  = [],[]
+				# Schedule combined engagement function
+				for execution_time, (likes, comments) in schedules.items():
+					result = schedule.every().day.at(execution_time).do(
+						engage, task_id, engagement_id, likes, comments
+					).tag(engagement_id, "engagement")
+					results.append(result)
+					exec_times.append(execution_time)
+					total_schedules += 1
+
+					print(f"Engagements scheduled for {task_id} on day {current_day} | execution time {execution_time} | scheduler data {result}")
+
+				TASK_SCHEDULES[engagement_id] = exec_times
+				return True, f"Engagements scheduled for {task_id} on day {current_day} | execution time {exec_times} | scheduler data {results}", total_schedules
+
+			return False, f'Not enough likes or comments on task {task_id} | engagement {engagement_id} | day {current_day}', total_schedules
+
+		except Exception as error:
+			return False, str(error), total_schedules
+		
+	@staticmethod
+	# Background thread to run the scheduler
+	def run_scheduler():
+		while True:
+			print("📅 Scheduled Jobs (Direct Access):")
+			for job in schedule.jobs:
+				print(f"⏰ Next Run: {job.next_run.strftime('%H:%M:%S')} | Function: {job.job_func} | Tags: {job.tags}")
+			schedule.run_pending()
+			time.sleep(30)
+
+
+# Start the scheduler in a separate thread
+scheduler_thread = Thread(target=Scheduler.run_scheduler, daemon=True)
+scheduler_thread.start()

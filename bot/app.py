@@ -1,6 +1,7 @@
 from app_configs import *
-from utils import Utils
+from utils import Utils,Scheduler
 from actions import Creator,_4BASED
+from start_tasks import start
 
 @socketio.on('connect')
 def handle_connect():
@@ -499,7 +500,7 @@ def handle_posts(action):
             }
 
             # Schedule the task
-            success, msg = schedule_task(task_id,schedule_time)
+            success, msg = Scheduler.schedule_task(task_id,schedule_time)
             if not success:raise Exception(msg)
 
             success, msg = Utils.add_task(task_id, task_data)
@@ -1051,19 +1052,13 @@ def handle_logs(action):
 
 
 
-
-
-
-
 if __name__ == "__main__":
     try:
         success,msg = Utils.create_tables()
         if not success:raise Exception(msg)
 
-        # Start the scheduler in a separate thread
-        scheduler_thread = Thread(target=run_scheduler, daemon=True)
-        scheduler_thread.start()
-
+        # from start_tasks import engage
+        # engage('B7D89324','0956483A',2,1)
         socketio.run(app)
     except Exception as error:
         Utils.write_log(error)

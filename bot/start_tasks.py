@@ -1,8 +1,7 @@
 import json,uuid
 from datetime import datetime
-from app_configs import schedule_engagements
 from actions import _4BASED
-from utils import Utils
+from utils import Utils, Scheduler
 import time,random
 
 
@@ -90,7 +89,7 @@ def start (task_id):
                     'post_ids':posts
                 }
 
-                success,msg,total_schedules = schedule_engagements(engagement)
+                success,msg,total_schedules = Scheduler.schedule_engagements(engagement)
                 if not success:raise Exception(msg)
 
                 Utils.write_log(msg)
@@ -138,37 +137,40 @@ def start (task_id):
 
 def engage(task_id, engagement_id, like_count, comment_count):
     try:
-        print(f"Running scheduled engagement {engagement_id} on task {task_id}...")
+        Utils.write_log(f"Running scheduled engagement {engagement_id} on task {task_id}...")
         success, task = Utils.get_task(task_id)
         if not success:
             raise Exception(f'The specified task {task_id} does not exist')
 
         success, engagement = Utils.get_engagement(engagement_id)
-        if not success:
-            raise Exception(f'The specified engagement {engagement_id} does not exist')
+        if not success:raise Exception(engagement)
 
         current_day, engagement_status = engagement['current_day'], engagement['status']
         task_status, task_config = task['status'], json.loads(task['config'])
 
-        total_engagements_for_day = engagement['daily_total']
+        Utils.write_log(f'Engagement : {engagement}')
+        print('\n')
+        Utils.write_log(f'Task: {task}')
+
+        total_engagements_for_day = engagement.get('daily_total',1)
         completed_engagements = engagement.get('completed_engagements', 0)
 
         if (task_status == 'running' and engagement_status in ['pending', 'running']) and like_count >= 1:
             engagement_status = 'liking'
 
+            # print(task_status,engagement_status)
+
             success, msg = Utils.update_client({
                 'msg': f'Liking started on task {task_id} | engagement {engagement_id} | day {current_day}',
                 'status': 'success', 'type': 'message'
             })
-            if not success:
-                raise Exception(msg)
+            if not success:raise Exception(msg)
 
             engagement.update({'status': engagement_status})
             success, msg = Utils.update_engagement(engagement_id, engagement)
-            if not success:
-                raise Exception(str(msg))
+            if not success:raise Exception(str(msg))
 
-            success, engagement_status, msg, client_msg = _4BASED.start_like_comment(
+            success, engagement_status, msg, client_msg = _4BASED().start_like_comment(
                 engagement,
                 task_config['admin'],
                 like_count,
@@ -176,20 +178,19 @@ def engage(task_id, engagement_id, like_count, comment_count):
             )
 
             success, msg = Utils.update_client(client_msg)
-            if not success:
-                raise Exception(msg)
+            if not success:raise Exception(msg)
 
             engagement_status = 'running' if success else engagement_status
             completed_engagements += like_count
 
-            success, msg = Utils.update_engagement(engagement_id, {
+            engagement.update({
                 'status': engagement_status,
                 'message': msg,
                 'completed_engagements': completed_engagements,
                 'current_day': current_day
             })
-            if not success:
-                raise Exception(msg)
+            success, msg = Utils.update_engagement(engagement_id, engagement)
+            if not success:raise Exception(msg)
 
         if (task_status == 'running' and engagement_status in ['pending', 'running']) and comment_count >= 1:
             engagement_status = 'commenting'
@@ -206,7 +207,7 @@ def engage(task_id, engagement_id, like_count, comment_count):
             if not success:
                 raise Exception(str(msg))
 
-            success, engagement_status, msg, client_msg = _4BASED.start_like_comment(
+            success, engagement_status, msg, client_msg = _4BASED().start_like_comment(
                 engagement,
                 task_config['admin'],
                 comment_count,
@@ -221,18 +222,17 @@ def engage(task_id, engagement_id, like_count, comment_count):
             engagement_status = 'running' if success else engagement_status
             completed_engagements += comment_count
 
-            success, msg = Utils.update_engagement(engagement_id, {
-                'status': engagement_status,
+            engagement.update({'status': engagement_status,
                 'message': msg,
                 'completed_engagements': completed_engagements,
                 'current_day': current_day
             })
-            if not success:
-                raise Exception(msg)
+            success, msg = Utils.update_engagement(engagement_id, engagement)
+            if not success:raise Exception(msg)
 
         # ** Check if the day's engagements are complete, then schedule the next day **
         if completed_engagements >= total_engagements_for_day:
-            if current_day < len(engagement['like_pattern']) and current_day < len(engagement['comment_pattern']):
+            if current_day < len(engagement['like_pattern'].items()) and current_day < len(engagement['comment_pattern'].items()):
                 current_day += 1  # Move to next day
 
                 engagement.update({
@@ -240,18 +240,20 @@ def engage(task_id, engagement_id, like_count, comment_count):
                     'current_day': current_day,
                     'completed_engagements': 0
                 })
-                success, msg, total_schedules = schedule_engagements(engagement)
+                success, msg, total_schedules = Scheduler.schedule_engagements(engagement)
                 if not success:
                     raise Exception(msg)
                 
                 engagement['daily_total'] = total_schedules
 
-                success, msg = Utils.update_engagement(engagement_id, {
+                engagement.update({
                     'status': 'pending',
                     'message': f'New schedules added for day {current_day}',
                     'current_day': current_day,
                     'completed_engagements': 0
                 })
+
+                success, msg = Utils.update_engagement(engagement_id, engagement)
                 if not success:
                     raise Exception(msg)
 
@@ -260,8 +262,8 @@ def engage(task_id, engagement_id, like_count, comment_count):
                     'status': 'success',
                     'type': 'message'
                 })
-                if not success:
-                    raise Exception(msg)
+
+                if not success:raise Exception(msg)
 
     except Exception as error:
         Utils.write_log(error)
